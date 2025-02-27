@@ -1,13 +1,16 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using EmailService;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using pfebackend.Config;
 using pfebackend.Models.Database;
 using pfebackend.Models.DataTransferObject;
+using pfebackend.Models.DataTransferObjects;
 
 namespace pfebackend.Controllers
 {
@@ -17,11 +20,13 @@ namespace pfebackend.Controllers
     {
         private readonly UserManager<User> _userManager;
         private readonly IOptions<AppSettings> _appSettings;
+        private readonly IEmailSender _emailSender;
 
-        public IdentityUserController(UserManager<User> userManager, IOptions<AppSettings> appSettings)
+        public IdentityUserController(UserManager<User> userManager, IOptions<AppSettings> appSettings , IEmailSender emailSender)
         {
             _userManager = userManager;
             _appSettings = appSettings;
+            _emailSender = emailSender;
         }
 
         [HttpPost("signup")]
@@ -90,6 +95,29 @@ namespace pfebackend.Controllers
             }
 
             return Ok("User updated successfully");
+        }
+        [HttpPost("forgotpassword")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto forgotPassword)
+        {
+            if(!ModelState.IsValid)
+                return BadRequest("Invalid data");
+            var user = await _userManager.FindByEmailAsync(forgotPassword.Email!);
+            if(user is null)
+                return BadRequest("User not found");
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var param = new Dictionary<string, string?>
+            {
+                {"token", token},
+                {"email", forgotPassword.Email!}
+            };
+
+            var callback = QueryHelpers.AddQueryString(forgotPassword.ClientUri!, param);
+
+            var message = new Message([user.Email], "Reset password token", callback);
+
+             _emailSender.SendEmail(message);
+
+            return Ok();
         }
     }
 }

@@ -11,7 +11,12 @@ namespace pfebackend.Extensions
     {
         public static IServiceCollection AddIdentityHandlersAndStores(this IServiceCollection services)
         {
-            services.AddIdentityApiEndpoints<User>().AddEntityFrameworkStores<AppDbContext>();
+            services.AddIdentityApiEndpoints<User>()
+                    .AddEntityFrameworkStores<AppDbContext>()
+                    .AddDefaultTokenProviders();
+
+            services.Configure<DataProtectionTokenProviderOptions>(options =>
+            options.TokenLifespan = TimeSpan.FromHours(2));
             return services;
         }
         public static IServiceCollection ConfigureIdentityOptions(this IServiceCollection services)
