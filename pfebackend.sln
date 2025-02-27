@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.12.35707.178 d17.12
+VisualStudioVersion = 17.12.35707.178
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "pfebackend", "pfebackend\pfebackend.csproj", "{92302FFF-2E58-4F64-B0DB-EB181E9DBFBF}"
 EndProject
@@ -9,6 +9,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EmailService", "EmailService\EmailService.csproj", "{B66B52D0-C438-43E3-8451-2E7F913D0E66}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -20,6 +22,10 @@ Global
 		{92302FFF-2E58-4F64-B0DB-EB181E9DBFBF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{92302FFF-2E58-4F64-B0DB-EB181E9DBFBF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{92302FFF-2E58-4F64-B0DB-EB181E9DBFBF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B66B52D0-C438-43E3-8451-2E7F913D0E66}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B66B52D0-C438-43E3-8451-2E7F913D0E66}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B66B52D0-C438-43E3-8451-2E7F913D0E66}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B66B52D0-C438-43E3-8451-2E7F913D0E66}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

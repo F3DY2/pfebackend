@@ -1,3 +1,5 @@
+using System.Net.Http.Headers;
+using EmailService;
 using pfebackend.Controllers;
 using pfebackend.Extensions;
 using pfebackend.Models.Database;
@@ -11,6 +13,11 @@ builder.Services.AddSwaggerExplorer()
                 .AddIdentityHandlersAndStores()
                 .ConfigureIdentityOptions()
                 .AddIdentityAuth(builder.Configuration);
+EmailConfiguration emailConfig = builder.Configuration
+    .GetSection("EmailConfiguration")
+    .Get<EmailConfiguration>();
+builder.Services.AddSingleton(emailConfig);
+builder.Services.AddScoped<IEmailSender, EmailSender>();
 
 var app = builder.Build();
 
@@ -26,6 +33,8 @@ app.MapGroup("/api")
 
 app.MapGroup("/api")
    .MapIdentityConsumerEndpoints();
+
+
 
 app.Run();
 
