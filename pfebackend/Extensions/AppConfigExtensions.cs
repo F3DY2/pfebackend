@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using pfebackend.Models;
+using pfebackend.Config;
 
 namespace pfebackend.Extensions
 {

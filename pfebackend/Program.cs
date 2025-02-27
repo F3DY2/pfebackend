@@ -1,6 +1,6 @@
 using pfebackend.Controllers;
 using pfebackend.Extensions;
-using pfebackend.Models;
+using pfebackend.Models.Database;
 
 var builder = WebApplication.CreateBuilder(args);
 

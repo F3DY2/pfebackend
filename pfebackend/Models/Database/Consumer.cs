@@ -1,12 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.AspNetCore.Identity;
 
-namespace pfebackend.Models
+namespace pfebackend.Models.Database
 {
-    public class Consumer:IdentityUser
+    public class Consumer : IdentityUser
     {
         [PersonalData]
-        [Column(TypeName ="nvarchar(100)")]
+        [Column(TypeName = "nvarchar(100)")]
         public string first_Name { get; set; }
 
         [PersonalData]

@@ -5,40 +5,26 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using pfebackend.Models;
+using pfebackend.Config;
+using pfebackend.Models.Database;
+using pfebackend.Models.DataTransferObject;
 
 namespace pfebackend.Controllers
 {
-    public class UserRegistrationModel
-    {
-        public string Email { get; set; }
-        public string Password { get; set; }
-        public string first_Name { get; set; }
-
-        public string last_Name { get; set; }
-
-        public string PhoneNumber { get; set; }
-
-    }
-
-    public class LoginModel
-    {
-        public string Email { get; set; }
-        public string Password { get; set; }
-
-    }
-
-    public static class IdentityConsumerEndpoints
+    public static class IdentityConsumerController
     {
         public static IEndpointRouteBuilder MapIdentityConsumerEndpoints(this IEndpointRouteBuilder app)
         {
             app.MapPost("/signup", CreateUser);
 
             app.MapPost("/signin", SignIn);
+
+            app.MapPut("/update", UpdateUser);
             return app;
         }
+
         private static async Task<IResult> CreateUser(UserManager<Consumer> UserManager,
-                [FromBody] UserRegistrationModel userRegistrationModel)
+                [FromBody] UserRegistrationDto userRegistrationModel)
         {
                 Consumer user = new Consumer()
                 {
@@ -57,7 +43,7 @@ namespace pfebackend.Controllers
         }
 
         private static async Task<IResult> SignIn(UserManager<Consumer> UserManager,
-                [FromBody] LoginModel loginModel,
+                [FromBody] LoginDto loginModel,
                 IOptions<AppSettings> appSettings)
         {
             var user = await UserManager.FindByEmailAsync(loginModel.Email);
@@ -87,5 +73,33 @@ namespace pfebackend.Controllers
             else
                 return Results.BadRequest(new { message = "Username or password is incorrect. " });
         }
+        private static async Task<IResult> UpdateUser(
+            UserManager<Consumer> userManager,
+            [FromBody] UserUpdateDto userUpdateModel)
+        {
+            var user = await userManager.FindByEmailAsync(userUpdateModel.Email);
+
+            if (user == null)
+                return Results.NotFound("User not found");
+
+            user.first_Name = userUpdateModel.first_Name;
+            user.last_Name = userUpdateModel.last_Name;
+            user.PhoneNumber = userUpdateModel.PhoneNumber;
+
+            var result = await userManager.UpdateAsync(user);
+
+            if (!result.Succeeded)
+                return Results.BadRequest(result.Errors);
+                
+            if (!string.IsNullOrEmpty(userUpdateModel.OldPassword) && !string.IsNullOrEmpty(userUpdateModel.NewPassword))
+            {
+                var passwordChangeResult = await userManager.ChangePasswordAsync(user, userUpdateModel.OldPassword, userUpdateModel.NewPassword);
+                if (!passwordChangeResult.Succeeded)
+                    return Results.BadRequest(passwordChangeResult.Errors);
+            }
+
+            return Results.Ok("User updated successfully");
+        
+    }
     }
 }

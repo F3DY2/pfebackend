@@ -1,4 +1,4 @@
-﻿namespace pfebackend.Models
+﻿namespace pfebackend.Config
 {
     public class AppSettings
     {
