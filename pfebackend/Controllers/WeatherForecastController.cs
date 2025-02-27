@@ -1,3 +1,4 @@
+using EmailService;
 using Microsoft.AspNetCore.Mvc;
 
 namespace pfebackend.Controllers
@@ -12,15 +13,19 @@ namespace pfebackend.Controllers
         };
 
         private readonly ILogger<WeatherForecastController> _logger;
+        private readonly IEmailSender _emailSender;
 
-        public WeatherForecastController(ILogger<WeatherForecastController> logger)
+
+        public WeatherForecastController(IEmailSender emailSender)
         {
-            _logger = logger;
+            _emailSender=emailSender;
         }
 
         [HttpGet(Name = "GetWeatherForecast")]
         public IEnumerable<WeatherForecast> Get()
         {
+            var message = new Message(new string[] { "fedi.abidi2@gmail.com" }, "Test email", "this is Content from our email" );
+            _emailSender.SendEmail(message);
             return Enumerable.Range(1, 5).Select(index => new WeatherForecast
             {
                 Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
