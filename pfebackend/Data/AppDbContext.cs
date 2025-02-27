@@ -11,7 +11,7 @@ namespace pfebackend.Data
         {
 
         }
-        public DbSet<User> Consumers { get; set; }
+        public DbSet<User> Users { get; set; }
 
     }
 }
