@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace pfebackend.Models.Database
 {
-    public class Consumer : IdentityUser
+    public class User : IdentityUser
     {
         [PersonalData]
         [Column(TypeName = "nvarchar(100)")]

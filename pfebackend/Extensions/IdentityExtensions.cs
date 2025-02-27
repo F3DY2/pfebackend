@@ -11,7 +11,7 @@ namespace pfebackend.Extensions
     {
         public static IServiceCollection AddIdentityHandlersAndStores(this IServiceCollection services)
         {
-            services.AddIdentityApiEndpoints<Consumer>().AddEntityFrameworkStores<AppDbContext>();
+            services.AddIdentityApiEndpoints<User>().AddEntityFrameworkStores<AppDbContext>();
             return services;
         }
         public static IServiceCollection ConfigureIdentityOptions(this IServiceCollection services)

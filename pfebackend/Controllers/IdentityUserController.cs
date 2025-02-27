@@ -11,9 +11,9 @@ using pfebackend.Models.DataTransferObject;
 
 namespace pfebackend.Controllers
 {
-    public static class IdentityConsumerController
+    public static class IdentityUserController
     {
-        public static IEndpointRouteBuilder MapIdentityConsumerEndpoints(this IEndpointRouteBuilder app)
+        public static IEndpointRouteBuilder MapIdentityUserController(this IEndpointRouteBuilder app)
         {
             app.MapPost("/signup", CreateUser);
 
@@ -23,10 +23,10 @@ namespace pfebackend.Controllers
             return app;
         }
 
-        private static async Task<IResult> CreateUser(UserManager<Consumer> UserManager,
+        private static async Task<IResult> CreateUser(UserManager<User> UserManager,
                 [FromBody] UserRegistrationDto userRegistrationModel)
         {
-                Consumer user = new Consumer()
+                User user = new User()
                 {
                     UserName = userRegistrationModel.Email,
                     Email = userRegistrationModel.Email,
@@ -42,7 +42,7 @@ namespace pfebackend.Controllers
                     return Results.BadRequest(result);
         }
 
-        private static async Task<IResult> SignIn(UserManager<Consumer> UserManager,
+        private static async Task<IResult> SignIn(UserManager<User> UserManager,
                 [FromBody] LoginDto loginModel,
                 IOptions<AppSettings> appSettings)
         {
@@ -74,7 +74,7 @@ namespace pfebackend.Controllers
                 return Results.BadRequest(new { message = "Username or password is incorrect. " });
         }
         private static async Task<IResult> UpdateUser(
-            UserManager<Consumer> userManager,
+            UserManager<User> userManager,
             [FromBody] UserUpdateDto userUpdateModel)
         {
             var user = await userManager.FindByEmailAsync(userUpdateModel.Email);

@@ -6,7 +6,6 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using pfebackend.Data;
 
-
 #nullable disable
 
 namespace pfebackend.Migrations
@@ -230,7 +229,7 @@ namespace pfebackend.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("pfebackend.Models.Consumer", b =>
+            modelBuilder.Entity("pfebackend.Models.Database.User", b =>
                 {
                     b.HasBaseType("Microsoft.AspNetCore.Identity.IdentityUser");
 
@@ -242,7 +241,7 @@ namespace pfebackend.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(100)");
 
-                    b.HasDiscriminator().HasValue("Consumer");
+                    b.HasDiscriminator().HasValue("User");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

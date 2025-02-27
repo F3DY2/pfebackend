@@ -26,10 +26,10 @@ app.UseHttpsRedirection();
 
 app.MapControllers();
 app.MapGroup("/api")
-   .MapIdentityApi<Consumer>();
+   .MapIdentityApi<User>();
 
 app.MapGroup("/api")
-   .MapIdentityConsumerEndpoints();
+   .MapIdentityUserController();
 
 
 
