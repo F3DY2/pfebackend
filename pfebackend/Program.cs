@@ -13,11 +13,8 @@ builder.Services.AddSwaggerExplorer()
                 .AddIdentityHandlersAndStores()
                 .ConfigureIdentityOptions()
                 .AddIdentityAuth(builder.Configuration);
-EmailConfiguration emailConfig = builder.Configuration
-    .GetSection("EmailConfiguration")
-    .Get<EmailConfiguration>();
-builder.Services.AddSingleton(emailConfig);
-builder.Services.AddScoped<IEmailSender, EmailSender>();
+
+builder.Services.InjectEmailService(builder.Configuration);
 
 var app = builder.Build();
 
