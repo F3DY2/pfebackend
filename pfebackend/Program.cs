@@ -25,13 +25,9 @@ app.ConfigureSwaggerExplorer()
 app.UseHttpsRedirection();
 
 app.MapControllers();
+
 app.MapGroup("/api")
    .MapIdentityApi<User>();
-
-app.MapGroup("/api")
-   .MapIdentityUserController();
-
-
 
 app.Run();
 
