@@ -66,7 +66,14 @@ namespace pfebackend.Controllers
                 var securityToken = tokenHandler.CreateToken(tokenDescriptor);
                 var token = tokenHandler.WriteToken(securityToken);
 
-                return Ok(new { token });
+                var userData = new
+                {
+                    user.first_Name,
+                    user.last_Name,
+                    user.PhoneNumber,
+                    user.Email
+                };
+                return Ok(new { token ,userData });
             }
 
             return BadRequest(new { message = "Username or password is incorrect." });
