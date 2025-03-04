@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages;
 using pfebackend.Config;
 using pfebackend.Models.Database;
 using pfebackend.Models.DataTransferObject;
@@ -120,7 +121,33 @@ namespace pfebackend.Controllers
             return Ok();
         }
 
-       
+        [HttpPost("resetpassword")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto resetPassword)
+        {
+            var user = await _userManager.FindByEmailAsync(resetPassword.Email!);
+            if (!string.IsNullOrEmpty(resetPassword.CurrentPassword) && !string.IsNullOrEmpty(resetPassword.NewPassword))
+            {
+                var passwordChangeResult = await _userManager.ChangePasswordAsync(user, resetPassword.CurrentPassword, resetPassword.NewPassword);
+                if (!passwordChangeResult.Succeeded)
+                    return BadRequest(passwordChangeResult.Errors);
+                return Ok();
+            }
+
+            if (!ModelState.IsValid)
+                return BadRequest("Invalid data");
+            
+            if (user is null)
+                return BadRequest("User not found");
+
+            var result = await _userManager.ResetPasswordAsync(user, resetPassword.Token, resetPassword.NewPassword);
+            if (!result.Succeeded)
+            {
+                var errors = result.Errors.Select(e => e.Description);
+
+                return BadRequest(new { Errors = errors });
+            }
+            return Ok();
+        }
 
     }
 }
