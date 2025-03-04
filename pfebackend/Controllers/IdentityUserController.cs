@@ -73,7 +73,7 @@ namespace pfebackend.Controllers
                     user.PhoneNumber,
                     user.Email
                 };
-                return Ok(new { token ,userData });
+                return Ok(new { token , userData });
             }
 
             return BadRequest(new { message = "Username or password is incorrect." });
@@ -93,13 +93,6 @@ namespace pfebackend.Controllers
             var result = await _userManager.UpdateAsync(user);
             if (!result.Succeeded)
                 return BadRequest(result.Errors);
-
-            if (!string.IsNullOrEmpty(userUpdateModel.OldPassword) && !string.IsNullOrEmpty(userUpdateModel.NewPassword))
-            {
-                var passwordChangeResult = await _userManager.ChangePasswordAsync(user, userUpdateModel.OldPassword, userUpdateModel.NewPassword);
-                if (!passwordChangeResult.Succeeded)
-                    return BadRequest(passwordChangeResult.Errors);
-            }
 
             return Ok("User updated successfully");
         }
@@ -126,5 +119,8 @@ namespace pfebackend.Controllers
 
             return Ok();
         }
+
+       
+
     }
 }
