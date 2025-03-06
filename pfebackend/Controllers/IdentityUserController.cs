@@ -35,7 +35,6 @@ namespace pfebackend.Controllers
         {
             var user = new User
             {
-                UserName = userRegistrationModel.Email,
                 Email = userRegistrationModel.Email,
                 first_Name = userRegistrationModel.first_Name,
                 last_Name = userRegistrationModel.last_Name,
@@ -124,7 +123,14 @@ namespace pfebackend.Controllers
         [HttpPost("resetpassword")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto resetPassword)
         {
+            if (!ModelState.IsValid)
+                return BadRequest("Invalid data");
+
             var user = await _userManager.FindByEmailAsync(resetPassword.Email!);
+
+            if (user is null)
+                return BadRequest("User not found");
+
             if (!string.IsNullOrEmpty(resetPassword.CurrentPassword) && !string.IsNullOrEmpty(resetPassword.NewPassword))
             {
                 var passwordChangeResult = await _userManager.ChangePasswordAsync(user, resetPassword.CurrentPassword, resetPassword.NewPassword);
@@ -132,12 +138,6 @@ namespace pfebackend.Controllers
                     return BadRequest(passwordChangeResult.Errors);
                 return Ok();
             }
-
-            if (!ModelState.IsValid)
-                return BadRequest("Invalid data");
-            
-            if (user is null)
-                return BadRequest("User not found");
 
             var result = await _userManager.ResetPasswordAsync(user, resetPassword.Token, resetPassword.NewPassword);
             if (!result.Succeeded)
