@@ -58,7 +58,7 @@ namespace pfebackend.Controllers
             if (!result.Succeeded)
                 return BadRequest(result.Errors);
 
-            return Ok("User updated successfully");
+            return Ok(new { message = "User updated successfully" });
         }
         [HttpPost("forgotpassword")]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto forgotPassword)
@@ -69,7 +69,7 @@ namespace pfebackend.Controllers
             IdentityResult result = await _userService.ForgotPasswordHandler(forgotPassword);
 
             if (result.Succeeded)
-                return Ok("Email sent");
+                return Ok(new { message = "Email sent" });
 
             return BadRequest(result.Errors);
         }
@@ -78,16 +78,20 @@ namespace pfebackend.Controllers
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto resetPassword)
         {
             if (!ModelState.IsValid)
-                return BadRequest("Invalid data");
+                return BadRequest(new { message = "Invalid data" });
 
             IdentityResult result = await _userService.ResetPasswordHandler(resetPassword);
 
             if (result.Succeeded)
             {
-                return Ok("Password reset successfully");
+                // Renvoyer un message de succès sous forme de JSON
+                return Ok(new { message = "Password reset successfully" });
             }
-            return BadRequest(result.Errors);
+
+            // Renvoyer les erreurs sous forme de JSON
+            return BadRequest(new { errors = result.Errors.Select(e => e.Description) });
         }
+
 
     }
 }
