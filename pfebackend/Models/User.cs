@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.AspNetCore.Identity;
 
-namespace pfebackend.Models.Database
+namespace pfebackend.Models
 {
     public class User : IdentityUser
     {
@@ -12,7 +12,6 @@ namespace pfebackend.Models.Database
         [PersonalData]
         [Column(TypeName = "nvarchar(100)")]
         public string last_Name { get; set; }
-
 
 
     }

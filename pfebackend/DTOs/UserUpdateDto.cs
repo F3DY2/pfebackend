@@ -1,4 +1,4 @@
-﻿namespace pfebackend.Models.DataTransferObject
+﻿namespace pfebackend.DTOs
 {
     public class UserUpdateDto
     {

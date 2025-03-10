@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace pfebackend.Models.DataTransferObjects
+namespace pfebackend.DTOs
 {
     public class ForgotPasswordDto
     {

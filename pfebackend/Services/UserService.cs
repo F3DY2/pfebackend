@@ -1,0 +1,122 @@
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using EmailService;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using pfebackend.Config;
+using pfebackend.DTOs;
+using pfebackend.Interfaces;
+using pfebackend.Models;
+
+namespace pfebackend.Services
+{
+    public class UserService : IUserService
+    {
+        private readonly UserManager<User> _userManager;
+        private readonly IOptions<AppSettings> _appSettings;
+        private readonly IEmailSender _emailSender;
+
+        public UserService(UserManager<User> userManager, IOptions<AppSettings> appSettings, IEmailSender emailSender)
+        {
+            _userManager = userManager;
+            _appSettings = appSettings;
+            _emailSender = emailSender;
+        }
+
+        public async Task<IdentityResult> CreateUserAsync(UserRegistrationDto userRegistrationModel)
+        {
+            User user = new User
+            {
+                UserName = userRegistrationModel.Email,
+                Email = userRegistrationModel.Email,
+                first_Name = userRegistrationModel.first_Name,
+                last_Name = userRegistrationModel.last_Name,
+                PhoneNumber = userRegistrationModel.PhoneNumber,
+            };
+
+            return await _userManager.CreateAsync(user, userRegistrationModel.Password);
+        }
+        public async Task<(string Token, object UserData)?> AuthenticateUser(LoginDto loginModel)
+        {
+            User user = await _userManager.FindByEmailAsync(loginModel.Email);
+            if (user != null && await _userManager.CheckPasswordAsync(user, loginModel.Password))
+            {
+                SymmetricSecurityKey signInKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_appSettings.Value.JWTSecret));
+                SecurityTokenDescriptor tokenDescriptor = new SecurityTokenDescriptor
+                {
+                    Subject = new ClaimsIdentity(new[] { new Claim("UserID", user.Id.ToString()) }),
+                    Expires = DateTime.UtcNow.AddDays(10),
+                    SigningCredentials = new SigningCredentials(signInKey, SecurityAlgorithms.HmacSha256Signature)
+                };
+
+                JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
+                SecurityToken securityToken = tokenHandler.CreateToken(tokenDescriptor);
+                string token = tokenHandler.WriteToken(securityToken);
+
+                object userData = new
+                {
+                    user.first_Name,
+                    user.last_Name,
+                    user.PhoneNumber,
+                    user.Email
+                };
+                return ( token, userData );
+            }
+            return null;
+        }
+        public async Task<IdentityResult> EditUserProfile(UserUpdateDto userUpdateModel)
+        {
+            User user = await _userManager.FindByEmailAsync(userUpdateModel.Email);
+            if (user == null)
+                return IdentityResult.Failed(new IdentityError { Description = "User not found" });
+
+            user.first_Name = userUpdateModel.first_Name;
+            user.last_Name = userUpdateModel.last_Name;
+            user.PhoneNumber = userUpdateModel.PhoneNumber;
+
+            return await _userManager.UpdateAsync(user);
+        }
+        public async Task<IdentityResult> ForgotPasswordHandler(ForgotPasswordDto forgotPassword)
+        {
+
+            User user = await _userManager.FindByEmailAsync(forgotPassword.Email!);
+
+            if (user == null)
+                return IdentityResult.Failed(new IdentityError { Description = "User not found" });
+
+            string token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            Dictionary<string, string?> param = new Dictionary<string, string?>
+            {
+                {"token", token},
+                {"email", forgotPassword.Email!}
+            };
+
+            string callback = QueryHelpers.AddQueryString(forgotPassword.ClientUri!, param);
+
+            Message message = new Message([user.Email], "Reset password token", callback);
+
+            _emailSender.SendEmail(message);
+
+            return IdentityResult.Success;
+        }
+        public async Task<IdentityResult> ResetPasswordHandler(ResetPasswordDto resetPassword)
+        {
+            User user = await _userManager.FindByEmailAsync(resetPassword.Email!);
+            if (user == null)
+                return IdentityResult.Failed(new IdentityError { Description = "User not found" });
+            if (!string.IsNullOrEmpty(resetPassword.CurrentPassword) && !string.IsNullOrEmpty(resetPassword.NewPassword))
+            {
+                return await _userManager.ChangePasswordAsync(user, resetPassword.CurrentPassword, resetPassword.NewPassword);
+            }
+            return await _userManager.ResetPasswordAsync(user, resetPassword.Token, resetPassword.NewPassword);
+        }
+
+
+    }
+
+}

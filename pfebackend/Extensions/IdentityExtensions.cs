@@ -2,8 +2,8 @@
 using System.Text;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
-using pfebackend.Models.Database;
 using pfebackend.Data;
+using pfebackend.Models;
 
 namespace pfebackend.Extensions
 {

@@ -2,7 +2,9 @@ using System.Net.Http.Headers;
 using EmailService;
 using pfebackend.Controllers;
 using pfebackend.Extensions;
-using pfebackend.Models.Database;
+using pfebackend.Interfaces;
+using pfebackend.Models;
+using pfebackend.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,7 +14,8 @@ builder.Services.AddSwaggerExplorer()
                 .AddAppConfig(builder.Configuration)
                 .AddIdentityHandlersAndStores()
                 .ConfigureIdentityOptions()
-                .AddIdentityAuth(builder.Configuration);
+                .AddIdentityAuth(builder.Configuration)
+                .AddScoped<IUserService, UserService>();
 
 builder.Services.InjectEmailService(builder.Configuration);
 

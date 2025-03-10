@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Client;
-using pfebackend.Models.Database;
+using pfebackend.Models;
 
 namespace pfebackend.Data
 {
