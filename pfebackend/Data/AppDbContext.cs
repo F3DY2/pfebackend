@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Identity.Client;
 using pfebackend.Models;
 
 namespace pfebackend.Data
@@ -12,6 +11,7 @@ namespace pfebackend.Data
 
         }
         public DbSet<User> Users { get; set; }
+        public DbSet<Expense> Expenses { get; set; }
 
     }
 }
