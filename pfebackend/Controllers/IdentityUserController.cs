@@ -2,6 +2,7 @@
 using System.Security.Claims;
 using System.Text;
 using EmailService;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
@@ -27,6 +28,7 @@ namespace pfebackend.Controllers
             _userService = userService; 
         }
 
+        [AllowAnonymous]
         [HttpPost("signup")]
         public async Task<IActionResult> CreateUser([FromBody] UserRegistrationDto userRegistrationModel)
         {
@@ -36,7 +38,8 @@ namespace pfebackend.Controllers
 
             return BadRequest(result.Errors);
         }
-
+        
+        [AllowAnonymous]
         [HttpPost("signin")]
         public async Task<IActionResult> SignIn([FromBody] LoginDto loginModel)
         {
@@ -48,9 +51,8 @@ namespace pfebackend.Controllers
             return BadRequest(new { message = "Username or password is incorrect." });
 
         }
-
         
-
+        [Authorize]
         [HttpPut("update")]
         public async Task<IActionResult> UpdateUser([FromBody] UserUpdateDto userUpdateModel)
         {
@@ -60,6 +62,8 @@ namespace pfebackend.Controllers
 
             return Ok("User updated successfully");
         }
+
+        [AllowAnonymous]
         [HttpPost("forgotpassword")]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto forgotPassword)
         {
@@ -69,11 +73,12 @@ namespace pfebackend.Controllers
             IdentityResult result = await _userService.ForgotPasswordHandler(forgotPassword);
 
             if (result.Succeeded)
-                return Ok("Email sent");
+                return Ok();
 
             return BadRequest(result.Errors);
         }
-
+        
+        [Authorize]
         [HttpPost("resetpassword")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto resetPassword)
         {

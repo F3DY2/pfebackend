@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using pfebackend.Data;
 using pfebackend.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace pfebackend.Extensions
 {
@@ -30,26 +31,37 @@ namespace pfebackend.Extensions
                 });
             return services;
         }
+        //Auth = Authentication + Authorization
         public static IServiceCollection AddIdentityAuth(
             this IServiceCollection services,
             IConfiguration config)
         {
-            services.AddAuthentication(x =>
-            {
-                x.DefaultAuthenticateScheme =
-                x.DefaultChallengeScheme =
-                x.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-            }).AddJwtBearer(y =>
+            services
+            .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(y =>
             {
                 y.SaveToken = false;
                 y.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuerSigningKey = true,
                     IssuerSigningKey = new SymmetricSecurityKey(
-                        Encoding.UTF8.GetBytes(
-                            config["AppSettings:JWTSecret"]!))
+                                  Encoding.UTF8.GetBytes(
+                                      config["AppSettings:JWTSecret"]!)),
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ValidateLifetime = true,
+                    ClockSkew = TimeSpan.Zero
                 };
             });
+            services.AddAuthorization(options =>
+            {
+                options.FallbackPolicy = new AuthorizationPolicyBuilder()
+                  .AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme)
+                  .RequireAuthenticatedUser()
+                  .Build();
+            });
+
+
             return services;
         }
         public static WebApplication AddIdentityAuthMiddlewares(this WebApplication app)
