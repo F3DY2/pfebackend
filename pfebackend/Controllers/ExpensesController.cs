@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using pfebackend.DTOs;
 using pfebackend.Interfaces;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Threading.Tasks;
 
 namespace pfebackend.Controllers
@@ -96,7 +97,7 @@ namespace pfebackend.Controllers
             var expenses = ImportExpenseData(path);
             foreach(var expense in expenses)
             {
-                PostExpense(expense);
+                await _expenseService.CreateExpenseAsync(expense);
             }
                 return Ok(new {ImportResult=true});
         }
@@ -105,36 +106,72 @@ namespace pfebackend.Controllers
         {
             return ImportCSVData<ExpenseDto>(file).ToList();
         }
-        private IEnumerable<T> ImportCSVData<T>(string filePath)
+        private IEnumerable<T> ImportCSVData<T>(string filePath) where T : new()
         {
-            List<T> list = new List<T>();
+            var lines = System.IO.File.ReadAllLines(filePath).ToList();
+            if (lines.Count == 0)
+            {
+                throw new InvalidOperationException("The CSV file is empty.");
+            }
 
-            List<string> lines = System.IO.File.ReadAllLines(filePath).ToList();
-            string headerLine = lines[0];
-            var columnNames = headerLine.Split(',');
+            var headerLine = lines[0];
+            var columnNames = headerLine.Split(',').Select(c => c.Trim().ToLower()).ToList();
             var columns = columnNames.Select((v, i) => new { colIndex = i, colName = v });
 
             var dataLines = lines.Skip(1);
-            Type type = typeof(T);
+            var type = typeof(T);
+            var list = new List<T>();
 
-            foreach(var row in dataLines)
+            foreach (var row in dataLines)
             {
-                var rowValues = row.Split(',').ToList();
-                var obj = (T?)Activator.CreateInstance(type);
-                foreach(var prop in type.GetProperties())
+                var rowValues = row.Split(',').Select(v => v.Trim()).ToList();
+                var obj = new T();
+
+                foreach (var prop in type.GetProperties())
                 {
-                    var col = columns.Single(c => c.colName.ToLower() == prop.Name.ToLower());
-                    var colIndex = col.colIndex;
-                    var value = rowValues[colIndex];
-                    prop.SetValue(obj, Convert.ChangeType(value,prop.PropertyType));
+                    if (prop.Name.Equals("Id", StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    var col = columns.FirstOrDefault(c => c.colName == prop.Name.ToLower());
+                    if (col != null)
+                    {
+                        var colIndex = col.colIndex;
+                        var value = rowValues[colIndex];
+                        if (!string.IsNullOrEmpty(value))
+                        {
+                            try
+                            {
+                                if (prop.PropertyType == typeof(DateTime) || prop.PropertyType == typeof(DateTime?))
+                                {
+                                    if (DateTime.TryParseExact(value, "dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out var dateValue))
+                                    {
+                                        prop.SetValue(obj, dateValue);
+                                    }
+                                }
+                                else if (prop.PropertyType.IsEnum)
+                                {
+                                    if (Enum.TryParse(prop.PropertyType, value, out var enumValue))
+                                    {
+                                        prop.SetValue(obj, enumValue);
+                                    }
+                                }
+                                else
+                                {
+                                    prop.SetValue(obj, Convert.ChangeType(value, prop.PropertyType));
+                                }
+                            }
+                            catch (Exception ex){}
+                        }
+                    }
                 }
-                if (obj != null)
-                {
-                    list.Add(obj);
-                }
-                
+
+                list.Add(obj);
             }
+
             return list;
         }
+
     }
 }
