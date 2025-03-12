@@ -84,5 +84,57 @@ namespace pfebackend.Controllers
 
             return NoContent();
         }
+        [Authorize]
+        [HttpPost("import-csv")]
+        public async Task<IActionResult> ImportCSVFile(IFormFile file)
+        {
+            string path = "uploads/tempcsv.csv";
+            using (var stream = System.IO.File.Create(path))
+            {
+                await file.CopyToAsync(stream);
+            }
+            var expenses = ImportExpenseData(path);
+            foreach(var expense in expenses)
+            {
+                PostExpense(expense);
+            }
+                return Ok(new {ImportResult=true});
+        }
+
+        private List<ExpenseDto> ImportExpenseData(string file)
+        {
+            return ImportCSVData<ExpenseDto>(file).ToList();
+        }
+        private IEnumerable<T> ImportCSVData<T>(string filePath)
+        {
+            List<T> list = new List<T>();
+
+            List<string> lines = System.IO.File.ReadAllLines(filePath).ToList();
+            string headerLine = lines[0];
+            var columnNames = headerLine.Split(',');
+            var columns = columnNames.Select((v, i) => new { colIndex = i, colName = v });
+
+            var dataLines = lines.Skip(1);
+            Type type = typeof(T);
+
+            foreach(var row in dataLines)
+            {
+                var rowValues = row.Split(',').ToList();
+                var obj = (T?)Activator.CreateInstance(type);
+                foreach(var prop in type.GetProperties())
+                {
+                    var col = columns.Single(c => c.colName.ToLower() == prop.Name.ToLower());
+                    var colIndex = col.colIndex;
+                    var value = rowValues[colIndex];
+                    prop.SetValue(obj, Convert.ChangeType(value,prop.PropertyType));
+                }
+                if (obj != null)
+                {
+                    list.Add(obj);
+                }
+                
+            }
+            return list;
+        }
     }
 }
