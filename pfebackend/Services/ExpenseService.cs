@@ -45,6 +45,28 @@ namespace pfebackend.Services
                 UserId = expense.UserId
             };
         }
+        public async Task<IEnumerable<ExpenseDto>> GetExpensesByUserIdAsync(string userId)
+        {
+            var expenses = await _context.Expenses
+                                          .Where(e => e.UserId == userId)
+                                          .ToListAsync();
+
+            if (expenses == null || !expenses.Any())
+            {
+                return Enumerable.Empty<ExpenseDto>(); 
+            }
+
+            return expenses.Select(e => new ExpenseDto
+            {
+                Id = e.Id,
+                Name = e.Name,
+                Category = (DTOs.Category)e.Category,
+                Date = e.Date,
+                Amount = e.Amount,
+                UserId = e.UserId
+            }).ToList();
+        }
+
 
         public async Task<bool> UpdateExpenseAsync(int id, ExpenseDto expenseDto)
         {

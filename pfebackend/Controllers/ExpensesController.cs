@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 namespace pfebackend.Controllers
 {
     [Route("api/[controller]")]
+    [Authorize]
     [ApiController]
     public class ExpensesController : ControllerBase
     {
@@ -19,7 +20,6 @@ namespace pfebackend.Controllers
             _expenseService = expenseService;
         }
 
-        [Authorize]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ExpenseDto>>> GetExpenses()
         {
@@ -27,7 +27,6 @@ namespace pfebackend.Controllers
             return Ok(expenses);
         }
 
-        [Authorize]
         [HttpGet("{id}")]
         public async Task<ActionResult<ExpenseDto>> GetExpense(int id)
         {
@@ -39,8 +38,14 @@ namespace pfebackend.Controllers
 
             return Ok(expense);
         }
+        [HttpGet("getUserExpensesById/{userId}")]
+        public async Task<ActionResult<IEnumerable<ExpenseDto>>> GetUserExpenses(string userId)
+        {
+            IEnumerable<ExpenseDto>? expenses = await _expenseService.GetExpensesByUserIdAsync(userId);
+            return Ok(expenses);
+        }
 
-        [Authorize]
+
         [HttpPut("{id}")]
         public async Task<IActionResult> PutExpense(int id, ExpenseDto expenseDto)
         {
@@ -53,7 +58,6 @@ namespace pfebackend.Controllers
             return NoContent();
         }
 
-        [Authorize]
         [HttpPost]
         public async Task<ActionResult<ExpenseDto>> PostExpense(ExpenseDto expenseDto)
         {
@@ -72,8 +76,6 @@ namespace pfebackend.Controllers
             return result;
         }
 
-
-        [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteExpense(int id)
         {
@@ -85,7 +87,7 @@ namespace pfebackend.Controllers
 
             return NoContent();
         }
-        [Authorize]
+
         [HttpPost("import-csv")]
         public async Task<IActionResult> ImportCSVFile(IFormFile file)
         {

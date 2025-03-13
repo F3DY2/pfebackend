@@ -6,6 +6,7 @@ namespace pfebackend.Interfaces
     {   
         Task<IEnumerable<ExpenseDto>> GetExpensesAsync();
         Task<ExpenseDto?> GetExpenseByIdAsync(int id);
+        Task<IEnumerable<ExpenseDto>> GetExpensesByUserIdAsync(string userId);
         Task<bool> UpdateExpenseAsync(int id, ExpenseDto expenseDto);
         Task<ExpenseDto> CreateExpenseAsync(ExpenseDto expenseDto);
         Task<bool> DeleteExpenseAsync(int id);
