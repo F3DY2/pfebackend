@@ -90,17 +90,34 @@ namespace pfebackend.Controllers
         public async Task<IActionResult> ImportCSVFile(IFormFile file)
         {
             string path = "uploads/tempcsv.csv";
-            using (var stream = System.IO.File.Create(path))
+            try
             {
-                await file.CopyToAsync(stream);
+                using (var stream = System.IO.File.Create(path))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                var expenses = ImportExpenseData(path);
+                foreach (var expense in expenses)
+                {
+                    await _expenseService.CreateExpenseAsync(expense);
+                }
+
+                return Ok(new { ImportResult = true });
             }
-            var expenses = ImportExpenseData(path);
-            foreach(var expense in expenses)
+            catch (Exception ex)
             {
-                await _expenseService.CreateExpenseAsync(expense);
+                return BadRequest(new { ImportResult = false, Error = ex.Message });
             }
-                return Ok(new {ImportResult=true});
+            finally
+            {
+                if (System.IO.File.Exists(path))
+                {
+                    System.IO.File.Delete(path);
+                }
+            }
         }
+
 
         private List<ExpenseDto> ImportExpenseData(string file)
         {
