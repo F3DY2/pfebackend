@@ -1,10 +1,10 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
-using System.Text;
+﻿using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using pfebackend.Data;
 using pfebackend.Models;
-using Microsoft.AspNetCore.Authorization;
 
 namespace pfebackend.Extensions
 {

@@ -17,6 +17,7 @@ using pfebackend.Models;
 namespace pfebackend.Controllers
 {
     [ApiController]
+    [Authorize]
     [Route("[controller]")]
     public class IdentityUserController : ControllerBase
     {
@@ -52,7 +53,7 @@ namespace pfebackend.Controllers
 
         }
         
-        [Authorize]
+       
         [HttpPut("update")]
         public async Task<IActionResult> UpdateUser([FromBody] UserUpdateDto userUpdateModel)
         {
@@ -78,7 +79,7 @@ namespace pfebackend.Controllers
             return BadRequest(result.Errors);
         }
         
-        [Authorize]
+        
         [HttpPost("resetpassword")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto resetPassword)
         {
