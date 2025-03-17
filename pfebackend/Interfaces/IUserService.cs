@@ -11,5 +11,6 @@ namespace pfebackend.Interfaces
         Task<IdentityResult> EditUserProfile(UserUpdateDto userUpdateModel);
         Task<IdentityResult> ForgotPasswordHandler(ForgotPasswordDto forgotPassword);
         Task<IdentityResult> ResetPasswordHandler(ResetPasswordDto resetPassword);
+        string GetCurrentUserId();
     }
 }

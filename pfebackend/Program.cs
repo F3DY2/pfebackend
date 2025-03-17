@@ -16,8 +16,9 @@ builder.Services.AddSwaggerExplorer()
                 .ConfigureIdentityOptions()
                 .AddIdentityAuth(builder.Configuration)
                 .AddScoped<IUserService, UserService>()
-                .AddScoped<IExpenseService, ExpenseService>();
-
+                .AddScoped<IExpenseService, ExpenseService>()
+                .AddScoped<ICsvImportService, CsvImportService>();
+builder.Services.AddHttpContextAccessor();
 builder.Services.InjectEmailService(builder.Configuration);
 
 var app = builder.Build();

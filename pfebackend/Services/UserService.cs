@@ -20,12 +20,14 @@ namespace pfebackend.Services
         private readonly UserManager<User> _userManager;
         private readonly IOptions<AppSettings> _appSettings;
         private readonly IEmailSender _emailSender;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public UserService(UserManager<User> userManager, IOptions<AppSettings> appSettings, IEmailSender emailSender)
+        public UserService(UserManager<User> userManager, IOptions<AppSettings> appSettings, IEmailSender emailSender, IHttpContextAccessor httpContextAccessor)
         {
             _userManager = userManager;
             _appSettings = appSettings;
             _emailSender = emailSender;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<IdentityResult> CreateUserAsync(UserRegistrationDto userRegistrationModel)
@@ -116,7 +118,18 @@ namespace pfebackend.Services
             return await _userManager.ResetPasswordAsync(user, resetPassword.Token, resetPassword.NewPassword);
         }
 
+        public string GetCurrentUserId()
+        {
+            var user = _httpContextAccessor.HttpContext?.User;
+            var userIdClaim = user?.Claims.FirstOrDefault(c => c.Type == "UserID")?.Value;
 
+            if (string.IsNullOrEmpty(userIdClaim))
+            {
+                throw new UnauthorizedAccessException("User ID not found in the token.");
+            }
+
+            return userIdClaim;
+        }
     }
 
 }

@@ -1,10 +1,9 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using pfebackend.DTOs;
 using pfebackend.Interfaces;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Threading.Tasks;
+using pfebackend.Services;
 
 namespace pfebackend.Controllers
 {
@@ -14,10 +13,14 @@ namespace pfebackend.Controllers
     public class ExpensesController : ControllerBase
     {
         private readonly IExpenseService _expenseService;
+        private readonly ICsvImportService _csvImportService;
+        private readonly IUserService _userService;
 
-        public ExpensesController(IExpenseService expenseService)
+        public ExpensesController(IExpenseService expenseService, ICsvImportService csvImportService, IUserService userService)
         {
             _expenseService = expenseService;
+            _csvImportService = csvImportService;
+            _userService = userService;
         }
 
         [HttpGet]
@@ -99,9 +102,13 @@ namespace pfebackend.Controllers
                     await file.CopyToAsync(stream);
                 }
 
-                var expenses = ImportExpenseData(path);
+                var userId = _userService.GetCurrentUserId();
+
+                var expenses = await _csvImportService.ImportExpensesFromCsvAsync(path);
+
                 foreach (var expense in expenses)
                 {
+                    expense.UserId = userId;
                     await _expenseService.CreateExpenseAsync(expense);
                 }
 
@@ -119,78 +126,5 @@ namespace pfebackend.Controllers
                 }
             }
         }
-
-
-        private List<ExpenseDto> ImportExpenseData(string file)
-        {
-            return ImportCSVData<ExpenseDto>(file).ToList();
-        }
-        private IEnumerable<T> ImportCSVData<T>(string filePath) where T : new()
-        {
-            var lines = System.IO.File.ReadAllLines(filePath).ToList();
-            if (lines.Count == 0)
-            {
-                throw new InvalidOperationException("The CSV file is empty.");
-            }
-
-            var headerLine = lines[0];
-            var columnNames = headerLine.Split(',').Select(c => c.Trim().ToLower()).ToList();
-            var columns = columnNames.Select((v, i) => new { colIndex = i, colName = v });
-
-            var dataLines = lines.Skip(1);
-            var type = typeof(T);
-            var list = new List<T>();
-
-            foreach (var row in dataLines)
-            {
-                var rowValues = row.Split(',').Select(v => v.Trim()).ToList();
-                var obj = new T();
-
-                foreach (var prop in type.GetProperties())
-                {
-                    if (prop.Name.Equals("Id", StringComparison.OrdinalIgnoreCase))
-                    {
-                        continue;
-                    }
-
-                    var col = columns.FirstOrDefault(c => c.colName == prop.Name.ToLower());
-                    if (col != null)
-                    {
-                        var colIndex = col.colIndex;
-                        var value = rowValues[colIndex];
-                        if (!string.IsNullOrEmpty(value))
-                        {
-                            try
-                            {
-                                if (prop.PropertyType == typeof(DateTime) || prop.PropertyType == typeof(DateTime?))
-                                {
-                                    if (DateTime.TryParseExact(value, "dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out var dateValue))
-                                    {
-                                        prop.SetValue(obj, dateValue);
-                                    }
-                                }
-                                else if (prop.PropertyType.IsEnum)
-                                {
-                                    if (Enum.TryParse(prop.PropertyType, value, out var enumValue))
-                                    {
-                                        prop.SetValue(obj, enumValue);
-                                    }
-                                }
-                                else
-                                {
-                                    prop.SetValue(obj, Convert.ChangeType(value, prop.PropertyType));
-                                }
-                            }
-                            catch (Exception ex){}
-                        }
-                    }
-                }
-
-                list.Add(obj);
-            }
-
-            return list;
-        }
-
     }
 }
