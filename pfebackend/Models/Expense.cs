@@ -33,10 +33,12 @@ namespace pfebackend.Models
     public enum Category
     {
         Food,
-        Rent,
-        Transportation,
-        Health,
+        Transport,
         Entertainment,
-        Other
+        Health,
+        Electronics,
+        Fashion,
+        Housing,
+        Others
     }
 }
