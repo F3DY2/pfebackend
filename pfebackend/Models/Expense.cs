@@ -21,7 +21,7 @@ namespace pfebackend.Models
         public DateTime Date { get; set; }
 
         [Required(ErrorMessage = "Amount is required.")]
-        [Range(1, int.MaxValue, ErrorMessage = "Amount must be greater than zero.")]
+        [Range(0, int.MaxValue, ErrorMessage = "Amount must be Positive.")]
         public float Amount { get; set; }
         [Required]
         public string UserId { get; set; } 

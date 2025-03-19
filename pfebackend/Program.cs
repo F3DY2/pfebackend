@@ -16,7 +16,8 @@ builder.Services.AddSwaggerExplorer()
                 .ConfigureIdentityOptions()
                 .AddIdentityAuth(builder.Configuration)
                 .AddHttpContextAccessor()
-                .InjectServices();
+                .InjectServices()
+                .AddHttpClient();
 
 builder.Services.InjectEmailService(builder.Configuration);
 

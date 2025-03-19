@@ -102,7 +102,7 @@ namespace pfebackend.Services
                 return null;
             }
 
-            if (expenseDto.Amount <= 0)
+            if (expenseDto.Amount < 0)
             {
                 return null;
             }
