@@ -78,8 +78,8 @@ namespace pfebackend.Controllers
 
             return BadRequest(result.Errors);
         }
-        
-        
+
+        [AllowAnonymous]
         [HttpPost("resetpassword")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto resetPassword)
         {
