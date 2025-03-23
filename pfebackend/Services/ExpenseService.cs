@@ -96,7 +96,7 @@ namespace pfebackend.Services
 
         public async Task<ExpenseDto> CreateExpenseAsync(ExpenseDto expenseDto)
         {
-            var userExists = await _context.Users.AnyAsync(u => u.Id == expenseDto.UserId);
+            bool userExists = await _context.Users.AnyAsync(u => u.Id == expenseDto.UserId);
             if (!userExists)
             {
                 return null;
@@ -117,8 +117,8 @@ namespace pfebackend.Services
 
             _context.Expenses.Add(expense);
             await _context.SaveChangesAsync();
-
             expenseDto.Id = expense.Id;
+
             return expenseDto;
         }
 

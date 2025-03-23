@@ -1,12 +1,6 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using pfebackend.Data;
-using pfebackend.Models;
+﻿using Microsoft.AspNetCore.Mvc;
 using pfebackend.DTOs;
-using pfebackend.Services; // Updated namespace for BudgetDto
+using pfebackend.Interfaces;
 
 namespace pfebackend.Controllers
 {
@@ -14,155 +8,85 @@ namespace pfebackend.Controllers
     [ApiController]
     public class BudgetsController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly IBudgetService _budgetService;
 
-        public BudgetsController(AppDbContext context)
+        public BudgetsController(IBudgetService budgetService)
         {
-            _context = context;
+            _budgetService = budgetService;
         }
 
         // GET: api/Budgets
         [HttpGet]
         public async Task<ActionResult<IEnumerable<BudgetDto>>> GetBudgets()
         {
-            return await _context.Budgets
-                .Select(b => new BudgetDto
-                {
-                    Id = b.Id,
-                    Category = (DTOs.Category)b.Category,
-                    limitValue = b.limitValue,
-                    alertValue = b.alertValue,
-                    UserId = b.UserId
-                })
-                .ToListAsync();
+            IEnumerable<BudgetDto> budgets = await _budgetService.GetAllBudget();
+            return Ok(budgets);
         }
+
+
 
         // GET: api/Budgets/5
         [HttpGet("{id}")]
         public async Task<ActionResult<BudgetDto>> GetBudget(int id)
         {
-            var budget = await _context.Budgets.FirstOrDefaultAsync(b => b.Id == id);
-
+            BudgetDto budget = await _budgetService.GetBudgetById(id);
             if (budget == null)
             {
                 return NotFound();
             }
-
-            return new BudgetDto
-            {
-                Id = budget.Id,
-                Category = (DTOs.Category)budget.Category,
-                limitValue = budget.limitValue,
-                alertValue = budget.alertValue,
-                UserId = budget.UserId
-            };
+            return Ok(budget);
         }
+
+
         [HttpGet("getUserBudgetsById/{userId}")]
         public async Task<ActionResult<IEnumerable<BudgetDto>>> GetUserBudgets(string userId)
         {
-            var budgets = await _context.Budgets
-                            .Where(b => b.UserId == userId)
-                            .ToListAsync();
-
-            if (budgets == null || !budgets.Any())
+            IEnumerable<BudgetDto> budget = await _budgetService.GetUserBudgetsByUserId(userId);
+            if (budget == null)
             {
-                return Ok(Enumerable.Empty<BudgetDto>());
+                return NotFound();
             }
-
-            return Ok(budgets.Select(b => new BudgetDto
-            {
-                Id = b.Id,
-                Category = (DTOs.Category)b.Category,
-                limitValue = b.limitValue,
-                alertValue = b.alertValue,
-                UserId = b.UserId
-            }).ToList());
+            return Ok(budget);
         }
+
 
         // PUT: api/Budgets/5
         [HttpPut("{id}")]
         public async Task<IActionResult> PutBudget(int id, BudgetDto budgetDto)
         {
-            if (id != budgetDto.Id)
-            {
-                return BadRequest();
-            }
-
-            var budget = await _context.Budgets.FindAsync(id);
-            if (budget == null)
+            bool isUpdated = await _budgetService.UpdateBudget(id, budgetDto);
+            if (!isUpdated)
             {
                 return NotFound();
             }
-
-            budget.Category = (Models.Category)budgetDto.Category;
-            budget.limitValue = (float)budgetDto.limitValue;
-            budget.alertValue = (float)budgetDto.alertValue;
-            budget.UserId = budgetDto.UserId;
-
-            _context.Entry(budget).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!BudgetExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
             return NoContent();
         }
+
+
 
         // POST: api/Budgets
         [HttpPost]
         public async Task<ActionResult<BudgetDto>> PostBudget(BudgetDto budgetDto)
         {
-            var budget = new Budget
+            BudgetDto budget = await _budgetService.CreateBudget(budgetDto);
+            if (budget == null)
             {
-                Category = (Models.Category)budgetDto.Category,
-                limitValue = budgetDto.limitValue,
-                alertValue = budgetDto.alertValue,
-                UserId = budgetDto.UserId
-            };
-            _context.Budgets.Add(budget);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetBudget", new { id = budget.Id }, new BudgetDto
-            {
-                Id = budget.Id,
-                Category = (DTOs.Category)budget.Category,
-                limitValue = budget.limitValue,
-                alertValue = budget.alertValue,
-                UserId = budget.UserId
-            });
+                return NotFound();
+            }
+            return Ok(budget);
         }
 
         // DELETE: api/Budgets/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteBudget(int id)
         {
-            var budget = await _context.Budgets.FindAsync(id);
-            if (budget == null)
+            bool isDeleted = await _budgetService.RemoveBudget(id);
+            if (!isDeleted)
             {
                 return NotFound();
             }
-
-            _context.Budgets.Remove(budget);
-            await _context.SaveChangesAsync();
-
             return NoContent();
         }
 
-        private bool BudgetExists(int id)
-        {
-            return _context.Budgets.Any(e => e.Id == id);
-        }
     }
 }
