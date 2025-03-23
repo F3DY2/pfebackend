@@ -36,8 +36,8 @@ namespace pfebackend.Services
             {
                 UserName = userRegistrationModel.Email,
                 Email = userRegistrationModel.Email,
-                first_Name = userRegistrationModel.first_Name,
-                last_Name = userRegistrationModel.last_Name,
+                FirstName = userRegistrationModel.FirstName,
+                LastName = userRegistrationModel.LastName,
                 PhoneNumber = userRegistrationModel.PhoneNumber,
             };
 
@@ -62,8 +62,8 @@ namespace pfebackend.Services
 
                 object userData = new
                 {
-                    user.first_Name,
-                    user.last_Name,
+                    user.FirstName,
+                    user.LastName,
                     user.PhoneNumber,
                     user.Email
                 };
@@ -77,8 +77,8 @@ namespace pfebackend.Services
             if (user == null)
                 return IdentityResult.Failed(new IdentityError { Description = "User not found" });
 
-            user.first_Name = userUpdateModel.first_Name;
-            user.last_Name = userUpdateModel.last_Name;
+            user.FirstName = userUpdateModel.FirstName;
+            user.LastName = userUpdateModel.LastName;
             user.PhoneNumber = userUpdateModel.PhoneNumber;
 
             return await _userManager.UpdateAsync(user);

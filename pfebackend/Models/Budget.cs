@@ -11,10 +11,10 @@ namespace pfebackend.Models
         public Category Category { get; set; }
         [Required]
         [Range(0, int.MaxValue, ErrorMessage = "Amount must be Positive.")]
-        public float limitValue { get; set; }
+        public float LimitValue { get; set; }
         [Required]
         [Range(0, int.MaxValue, ErrorMessage = "Amount must be Positive.")]
-        public float alertValue { get; set; }
+        public float AlertValue { get; set; }
         [Required]
         public string UserId { get; set; }
 

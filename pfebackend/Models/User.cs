@@ -7,11 +7,11 @@ namespace pfebackend.Models
     {
         [PersonalData]
         [Column(TypeName = "nvarchar(100)")]
-        public string first_Name { get; set; }
+        public string FirstName { get; set; }
 
         [PersonalData]
         [Column(TypeName = "nvarchar(100)")]
-        public string last_Name { get; set; }
+        public string LastName { get; set; }
 
 
     }

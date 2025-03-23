@@ -10,9 +10,9 @@ namespace pfebackend.DTOs
 
         public Category Category { get; set; }
 
-        public float limitValue { get; set; }
+        public float LimitValue { get; set; }
 
-        public float alertValue { get; set; }
+        public float AlertValue { get; set; }
 
         public string UserId { get; set; }
 

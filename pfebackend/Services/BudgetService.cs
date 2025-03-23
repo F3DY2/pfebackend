@@ -21,8 +21,8 @@ namespace pfebackend.Services
                 {
                     Id = b.Id,
                     Category = (DTOs.Category)b.Category,
-                    limitValue = b.limitValue,
-                    alertValue = b.alertValue,
+                    LimitValue = b.LimitValue,
+                    AlertValue = b.AlertValue,
                     UserId = b.UserId
                 })
                 .ToListAsync();
@@ -40,8 +40,8 @@ namespace pfebackend.Services
             {
                 Id = budget.Id,
                 Category = (DTOs.Category)budget.Category,
-                limitValue = budget.limitValue,
-                alertValue = budget.alertValue,
+                LimitValue = budget.LimitValue,
+                AlertValue = budget.AlertValue,
                 UserId = budget.UserId
             };
         }
@@ -60,8 +60,8 @@ namespace pfebackend.Services
             {
                 Id = b.Id,
                 Category = (DTOs.Category)b.Category,
-                limitValue = b.limitValue,
-                alertValue = b.alertValue,
+                LimitValue = b.LimitValue,
+                AlertValue = b.AlertValue,
                 UserId = b.UserId
             }).ToList();
         }
@@ -79,8 +79,8 @@ namespace pfebackend.Services
             }
 
             budget.Category = (Models.Category)budgetDto.Category;
-            budget.limitValue = (float)budgetDto.limitValue;
-            budget.alertValue = (float)budgetDto.alertValue;
+            budget.LimitValue = (float)budgetDto.LimitValue;
+            budget.AlertValue = (float)budgetDto.AlertValue;
             budget.UserId = budgetDto.UserId;
 
             _context.Entry(budget).State = EntityState.Modified;
@@ -100,8 +100,8 @@ namespace pfebackend.Services
             var budget = new Budget
             {
                 Category = (Models.Category)budgetDto.Category,
-                limitValue = budgetDto.limitValue,
-                alertValue = budgetDto.alertValue,
+                LimitValue = budgetDto.LimitValue,
+                AlertValue = budgetDto.AlertValue,
                 UserId = budgetDto.UserId
             };
             _context.Budgets.Add(budget);
