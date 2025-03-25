@@ -18,7 +18,7 @@ namespace pfebackend.Controllers
 {
     [ApiController]
     [Authorize]
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     public class IdentityUserController : ControllerBase
     {
 
