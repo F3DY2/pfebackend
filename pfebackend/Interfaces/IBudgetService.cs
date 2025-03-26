@@ -8,7 +8,7 @@ namespace pfebackend.Interfaces
         Task<IEnumerable<BudgetDto>> GetAllBudget();
         Task<BudgetDto> GetBudgetById(int id);
         Task<IEnumerable<BudgetDto>> GetUserBudgetsByUserId(string userId);
-        Task<bool> UpdateBudget(int id, BudgetDto budgetDto);
+        Task<(bool, string)> UpdateBudget(int id, BudgetDto budgetDto);
         Task<BudgetDto> CreateBudget(BudgetDto budgetDto);
         Task<bool> RemoveBudget(int id);
         Task<bool> CheckBudgetOverlap(BudgetDto budgetDto, int? excludeBudgetId = null);

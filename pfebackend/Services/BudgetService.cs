@@ -72,17 +72,17 @@ namespace pfebackend.Services
                 UserId = b.UserId
             }).ToList();
         }
-        public async Task<bool> UpdateBudget(int id, BudgetDto budgetDto)
+        public async Task<(bool, string)> UpdateBudget(int id, BudgetDto budgetDto)
         {
             if (id != budgetDto.Id)
             {
-                return false;
+                return (false, "The provided ID does not match the budget ID.");
             }
 
             var budget = await _context.Budgets.FindAsync(id);
             if (budget == null)
             {
-                return false;
+                return (false, "Budget not found.");
             }
 
             budget.Category = (Models.Category)budgetDto.Category;
@@ -100,13 +100,14 @@ namespace pfebackend.Services
             }
             catch (DbUpdateConcurrencyException)
             {
+                return (false, "A concurrency error occurred while updating the budget.");
             }
 
-            return true;
+            return (true, "Budget updated successfully.");
         }
         public async Task<BudgetDto> CreateBudget(BudgetDto budgetDto)
         {
-            var budget = new Budget
+            Budget budget = new Budget
             {
                 Category = (Models.Category)budgetDto.Category,
                 LimitValue = budgetDto.LimitValue,

@@ -32,7 +32,7 @@ namespace pfebackend.Controllers
             BudgetDto budget = await _budgetService.GetBudgetById(id);
             if (budget == null)
             {
-                return NotFound();
+                return NotFound(new { message = "No budgets found for the specified id." });
             }
             return Ok(budget);
         }
@@ -44,7 +44,7 @@ namespace pfebackend.Controllers
             IEnumerable<BudgetDto> budget = await _budgetService.GetUserBudgetsByUserId(userId);
             if (budget == null)
             {
-                return NotFound();
+                return NotFound(new { message = "No budgets found for the specified user." });
             }
             return Ok(budget);
         }
@@ -60,10 +60,11 @@ namespace pfebackend.Controllers
             {
                 return BadRequest(new { message = "Cannot add budget for similar category at the same date range." });
             }
-            bool isUpdated = await _budgetService.UpdateBudget(id, budgetDto);
+
+            var (isUpdated, message) = await _budgetService.UpdateBudget(id, budgetDto);
             if (!isUpdated)
             {
-                return NotFound();
+                return NotFound(new { message });
             }
             return NoContent();
         }
@@ -74,16 +75,16 @@ namespace pfebackend.Controllers
         [HttpPost]
         public async Task<ActionResult<BudgetDto>> PostBudget(BudgetDto budgetDto)
         {
+            BudgetDto budget = await _budgetService.CreateBudget(budgetDto);
             bool isOverlap = await _budgetService.CheckBudgetOverlap(budgetDto);
 
+            if (budget == null)
+            {
+                return NotFound(new { message = "Budget creation failed. The provided data might be invalid or incomplete." });
+            }
             if (isOverlap)
             {
                 return BadRequest(new { message = "Cannot add budget for similar category at the same date range." });
-            }
-            BudgetDto budget = await _budgetService.CreateBudget(budgetDto);
-            if (budget == null)
-            {
-                return NotFound();
             }
             return Ok(budget);
         }
@@ -95,7 +96,7 @@ namespace pfebackend.Controllers
             bool isDeleted = await _budgetService.RemoveBudget(id);
             if (!isDeleted)
             {
-                return NotFound();
+                return NotFound(new { message = $"Budget with ID {id} not found. Deletion failed." });
             }
             return NoContent();
         }
