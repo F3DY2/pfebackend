@@ -54,7 +54,7 @@ namespace pfebackend.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutBudget(int id, BudgetDto budgetDto)
         {
-            bool isOverlap = await _budgetService.CheckBudgetOverlap(budgetDto);
+            bool isOverlap = await _budgetService.CheckBudgetOverlap(budgetDto ,id);
 
             if (isOverlap)
             {
