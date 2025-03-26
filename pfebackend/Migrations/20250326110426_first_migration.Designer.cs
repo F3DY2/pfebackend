@@ -12,8 +12,8 @@ using pfebackend.Data;
 namespace pfebackend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250323100549_budget")]
-    partial class budget
+    [Migration("20250326110426_first_migration")]
+    partial class first_migration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -240,18 +240,24 @@ namespace pfebackend.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<float>("AlertValue")
+                        .HasColumnType("real");
+
                     b.Property<int>("Category")
                         .HasColumnType("int");
+
+                    b.Property<DateOnly>("EndDate")
+                        .HasColumnType("date");
+
+                    b.Property<float>("LimitValue")
+                        .HasColumnType("real");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date");
 
                     b.Property<string>("UserId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
-
-                    b.Property<float>("alertValue")
-                        .HasColumnType("real");
-
-                    b.Property<float>("limitValue")
-                        .HasColumnType("real");
 
                     b.HasKey("Id");
 
@@ -297,11 +303,11 @@ namespace pfebackend.Migrations
                 {
                     b.HasBaseType("Microsoft.AspNetCore.Identity.IdentityUser");
 
-                    b.Property<string>("first_Name")
+                    b.Property<string>("FirstName")
                         .IsRequired()
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<string>("last_Name")
+                    b.Property<string>("LastName")
                         .IsRequired()
                         .HasColumnType("nvarchar(100)");
 

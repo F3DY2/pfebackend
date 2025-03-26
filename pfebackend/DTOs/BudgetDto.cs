@@ -1,20 +1,30 @@
-﻿using pfebackend.Models;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using pfebackend.Attributes;
+using pfebackend.DTOs;
 using System.ComponentModel.DataAnnotations;
 
-namespace pfebackend.DTOs
+public class BudgetDto
 {
-    public class BudgetDto
-    {
-        public int? Id { get; set; }
+    public int? Id { get; set; }
 
-        public Category Category { get; set; }
+    [Required]
+    public Category Category { get; set; }
 
-        public float LimitValue { get; set; }
+    [Required]
+    [Range(0, int.MaxValue, ErrorMessage = "Amount must be Positive.")]
+    public float LimitValue { get; set; }
 
-        public float AlertValue { get; set; }
+    [Required]
+    [Range(0, int.MaxValue, ErrorMessage = "Amount must be Positive.")]
+    public float AlertValue { get; set; }
 
-        public string UserId { get; set; }
+    [Required]
+    [StartDate]
+    public DateOnly StartDate { get; set; }
 
-    }
+    [Required]
+    [EndDateAfterStartDate] 
+    public DateOnly EndDate { get; set; }
+
+    [Required]
+    public string UserId { get; set; }
 }

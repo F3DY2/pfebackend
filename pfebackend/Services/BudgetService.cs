@@ -23,6 +23,8 @@ namespace pfebackend.Services
                     Category = (DTOs.Category)b.Category,
                     LimitValue = b.LimitValue,
                     AlertValue = b.AlertValue,
+                    StartDate = b.StartDate,
+                    EndDate = b.EndDate,
                     UserId = b.UserId
                 })
                 .ToListAsync();
@@ -42,6 +44,8 @@ namespace pfebackend.Services
                 Category = (DTOs.Category)budget.Category,
                 LimitValue = budget.LimitValue,
                 AlertValue = budget.AlertValue,
+                StartDate = budget.StartDate,
+                EndDate = budget.EndDate,
                 UserId = budget.UserId
             };
         }
@@ -62,6 +66,8 @@ namespace pfebackend.Services
                 Category = (DTOs.Category)b.Category,
                 LimitValue = b.LimitValue,
                 AlertValue = b.AlertValue,
+                StartDate = b.StartDate,
+                EndDate = b.EndDate,
                 UserId = b.UserId
             }).ToList();
         }
@@ -81,6 +87,8 @@ namespace pfebackend.Services
             budget.Category = (Models.Category)budgetDto.Category;
             budget.LimitValue = (float)budgetDto.LimitValue;
             budget.AlertValue = (float)budgetDto.AlertValue;
+            budget.StartDate = budgetDto.StartDate;
+            budget.EndDate = budgetDto.EndDate;
             budget.UserId = budgetDto.UserId;
 
             _context.Entry(budget).State = EntityState.Modified;
@@ -102,6 +110,8 @@ namespace pfebackend.Services
                 Category = (Models.Category)budgetDto.Category,
                 LimitValue = budgetDto.LimitValue,
                 AlertValue = budgetDto.AlertValue,
+                StartDate = budgetDto.StartDate,
+                EndDate = budgetDto.EndDate,
                 UserId = budgetDto.UserId
             };
             _context.Budgets.Add(budget);
