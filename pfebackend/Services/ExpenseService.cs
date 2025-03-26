@@ -68,12 +68,14 @@ namespace pfebackend.Services
         }
 
 
-        public async Task<bool> UpdateExpenseAsync(int id, ExpenseDto expenseDto)
+        public async Task<(bool, string)> UpdateExpenseAsync(int id, ExpenseDto expenseDto)
         {
-            if (id != expenseDto.Id) return false;
+            if (id != expenseDto.Id)
+                return (false, "Expense ID mismatch.");
 
             Expense expense = await _context.Expenses.FindAsync(id);
-            if (expense == null) return false;
+            if (expense == null)
+                return (false, $"Expense with ID {id} not found.");
 
             expense.Name = expenseDto.Name;
             expense.Category = (Models.Category)expenseDto.Category;
@@ -86,25 +88,25 @@ namespace pfebackend.Services
             try
             {
                 await _context.SaveChangesAsync();
-                return true;
+                return (true, "Expense updated successfully.");
             }
             catch (DbUpdateConcurrencyException)
             {
-                return _context.Expenses.Any(e => e.Id == id);
+                return (_context.Expenses.Any(e => e.Id == id), "Concurrency issue occurred while updating.");
             }
         }
 
-        public async Task<ExpenseDto> CreateExpenseAsync(ExpenseDto expenseDto)
+        public async Task<(bool, string, ExpenseDto)> CreateExpenseAsync(ExpenseDto expenseDto)
         {
             bool userExists = await _context.Users.AnyAsync(u => u.Id == expenseDto.UserId);
             if (!userExists)
             {
-                return null;
+                return (false, "User with the provided ID does not exist.", null);
             }
 
             if (expenseDto.Amount < 0)
             {
-                return null;
+                return (false, "Amount must be greater than or equal to zero.", null);
             }
             Expense expense = new Expense
             {
@@ -119,7 +121,7 @@ namespace pfebackend.Services
             await _context.SaveChangesAsync();
             expenseDto.Id = expense.Id;
 
-            return expenseDto;
+            return (true, "Expense created successfully.", expenseDto);
         }
 
         public async Task<bool> DeleteExpenseAsync(int id)

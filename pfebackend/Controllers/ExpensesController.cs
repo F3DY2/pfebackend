@@ -36,7 +36,7 @@ namespace pfebackend.Controllers
             ExpenseDto? expense = await _expenseService.GetExpenseByIdAsync(id);
             if (expense == null)
             {
-                return NotFound();
+                return NotFound(new { Message = $"Expense with ID {id} not found." });
             }
 
             return Ok(expense);
@@ -52,31 +52,26 @@ namespace pfebackend.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutExpense(int id, ExpenseDto expenseDto)
         {
-            bool updated = await _expenseService.UpdateExpenseAsync(id, expenseDto);
+            (bool updated, string message) = await _expenseService.UpdateExpenseAsync(id, expenseDto);
             if (!updated)
             {
-                return NotFound();
+                return NotFound(new { Message = message });
             }
 
-            return NoContent();
+            return Ok(new { Message = message });
         }
 
         [HttpPost]
         public async Task<ActionResult<ExpenseDto>> PostExpense(ExpenseDto expenseDto)
         {
-            var result = await _expenseService.CreateExpenseAsync(expenseDto);
+            (bool success, string message, ExpenseDto createdExpenseDto) = await _expenseService.CreateExpenseAsync(expenseDto);
 
-            if (result == null)
+            if (!success)
             {
-                if (!await _expenseService.UserExists(expenseDto.UserId))
-                {
-                    return NotFound(new { message = "User not found." });
-                }
-
-                return BadRequest(new { message = "Amount must be greater than zero." });
+                return BadRequest(new { message });
             }
 
-            return result;
+            return Ok(createdExpenseDto);
         }
 
         [HttpDelete("{id}")]
@@ -85,7 +80,7 @@ namespace pfebackend.Controllers
             bool deleted = await _expenseService.DeleteExpenseAsync(id);
             if (!deleted)
             {
-                return NotFound();
+                return NotFound(new { message = $"Expense with ID {id} not found. Deletion failed." });
             }
 
             return NoContent();

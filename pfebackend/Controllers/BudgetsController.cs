@@ -66,7 +66,7 @@ namespace pfebackend.Controllers
             {
                 return NotFound(new { message });
             }
-            return NoContent();
+            return Ok(new { message });
         }
 
 
