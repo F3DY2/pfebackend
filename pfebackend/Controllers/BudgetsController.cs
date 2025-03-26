@@ -54,6 +54,12 @@ namespace pfebackend.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutBudget(int id, BudgetDto budgetDto)
         {
+            bool isOverlap = await _budgetService.CheckBudgetOverlap(budgetDto);
+
+            if (isOverlap)
+            {
+                return BadRequest(new { message = "Cannot add budget for similar category at the same date range." });
+            }
             bool isUpdated = await _budgetService.UpdateBudget(id, budgetDto);
             if (!isUpdated)
             {
@@ -68,6 +74,12 @@ namespace pfebackend.Controllers
         [HttpPost]
         public async Task<ActionResult<BudgetDto>> PostBudget(BudgetDto budgetDto)
         {
+            bool isOverlap = await _budgetService.CheckBudgetOverlap(budgetDto);
+
+            if (isOverlap)
+            {
+                return BadRequest(new { message = "Cannot add budget for similar category at the same date range." });
+            }
             BudgetDto budget = await _budgetService.CreateBudget(budgetDto);
             if (budget == null)
             {

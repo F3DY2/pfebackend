@@ -11,6 +11,7 @@ namespace pfebackend.Interfaces
         Task<bool> UpdateBudget(int id, BudgetDto budgetDto);
         Task<BudgetDto> CreateBudget(BudgetDto budgetDto);
         Task<bool> RemoveBudget(int id);
+        Task<bool> CheckBudgetOverlap(BudgetDto budgetDto, int? excludeBudgetId = null);
         bool BudgetExists(int id);
     }
 }

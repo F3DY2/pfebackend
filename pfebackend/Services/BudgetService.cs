@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Linq;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using pfebackend.Data;
 using pfebackend.DTOs;
@@ -136,6 +137,17 @@ namespace pfebackend.Services
         public bool BudgetExists(int id)
         {
             return _context.Budgets.Any(e => e.Id == id);
+        }
+        public async Task<bool> CheckBudgetOverlap(BudgetDto budgetDto, int? excludeBudgetId = null)
+        {
+            bool isOverlap = await _context.Budgets
+                .Where(b => b.UserId == budgetDto.UserId)
+                .Where(b => b.Category == (Models.Category)budgetDto.Category)
+                .Where(b => !excludeBudgetId.HasValue || b.Id != excludeBudgetId.Value) 
+                .AnyAsync(b => (b.StartDate <= budgetDto.EndDate && b.EndDate >= budgetDto.StartDate) ||
+                               (b.StartDate >= budgetDto.StartDate && b.EndDate <= budgetDto.EndDate));
+
+            return isOverlap;
         }
 
     }
