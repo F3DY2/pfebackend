@@ -3,7 +3,7 @@ using pfebackend.DTOs;
 
 namespace pfebackend.Interfaces
 {
-    public interface IBudgetPeriod
+    public interface IBudgetPeriodService
     {
 
         Task<List<BudgetPeriodDto>> GetBudgetPeriodsAsync();

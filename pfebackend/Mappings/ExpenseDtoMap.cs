@@ -3,6 +3,7 @@ using CsvHelper;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
 using pfebackend.DTOs;
+using pfebackend.Models;
 
 namespace pfebackend.Mappings
 {

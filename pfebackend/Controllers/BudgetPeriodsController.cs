@@ -12,10 +12,10 @@ namespace pfebackend.Controllers
     [ApiController]
     public class BudgetPeriodsController : ControllerBase
     {
-        private readonly IBudgetPeriod _budgetPeriodService;
+        private readonly IBudgetPeriodService _budgetPeriodService;
 
 
-        public BudgetPeriodsController(IBudgetPeriod budgetPeriodService)
+        public BudgetPeriodsController(IBudgetPeriodService budgetPeriodService)
         {
             _budgetPeriodService = budgetPeriodService;
         }
@@ -70,7 +70,7 @@ namespace pfebackend.Controllers
         [HttpPost]
         public async Task<ActionResult<BudgetPeriodDto>> PostBudgetPeriod(BudgetPeriodDto budgetPeriodDto)
         {
-            (bool isCreated, BudgetPeriodDto createdExpenseDto) = await _budgetPeriodService.PostBudgetPeriodAsync(budgetPeriodDto);
+            (bool isCreated, BudgetPeriodDto createdBudgeteDto) = await _budgetPeriodService.PostBudgetPeriodAsync(budgetPeriodDto);
             if (isCreated == false) 
             
             { return BadRequest(); }

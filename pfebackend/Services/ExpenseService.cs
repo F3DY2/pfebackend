@@ -22,10 +22,10 @@ namespace pfebackend.Services
                 {
                     Id = e.Id,
                     Name = e.Name,
-                    Category = (DTOs.Category)e.Category,
+                    Category = e.Category,
                     Date = e.Date,
                     Amount = e.Amount,
-                    UserId = e.UserId
+                    UserId = e.UserId,
                 })
                 .ToListAsync();
         }
@@ -39,7 +39,7 @@ namespace pfebackend.Services
             {
                 Id = expense.Id,
                 Name = expense.Name,
-                Category = (DTOs.Category)expense.Category,
+                Category = expense.Category,
                 Date = expense.Date,
                 Amount = expense.Amount,
                 UserId = expense.UserId
@@ -60,7 +60,7 @@ namespace pfebackend.Services
             {
                 Id = e.Id,
                 Name = e.Name,
-                Category = (DTOs.Category)e.Category,
+                Category = e.Category,
                 Date = e.Date,
                 Amount = e.Amount,
                 UserId = e.UserId

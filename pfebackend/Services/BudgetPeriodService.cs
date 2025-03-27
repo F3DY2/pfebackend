@@ -7,9 +7,10 @@ using pfebackend.Models;
 
 namespace pfebackend.Services
 {
-    public class BudgetPeriodService: IBudgetPeriod 
+    public class BudgetPeriodService: IBudgetPeriodService 
     {
         private readonly AppDbContext _context;
+
         public BudgetPeriodService(AppDbContext context)
         {
             _context = context;

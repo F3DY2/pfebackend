@@ -7,6 +7,7 @@ using CsvHelper.Configuration;
 using pfebackend.DTOs;
 using pfebackend.Interfaces;
 using pfebackend.Mappings;
+using pfebackend.Models;
 
 namespace pfebackend.Services
 {

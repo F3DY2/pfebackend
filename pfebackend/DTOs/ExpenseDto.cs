@@ -1,4 +1,6 @@
-﻿namespace pfebackend.DTOs
+﻿using pfebackend.Models;
+
+namespace pfebackend.DTOs
 {
     public class ExpenseDto
     {
@@ -9,15 +11,5 @@
         public float Amount { get; set; }
         public string? UserId { get; set; }
     }
-    public enum Category
-    {
-        Food,
-        Transport,
-        Entertainment,
-        Health,
-        Electronics,
-        Fashion,
-        Housing,
-        Others
-    }
+    
 }
