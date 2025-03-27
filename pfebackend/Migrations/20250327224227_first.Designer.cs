@@ -12,8 +12,8 @@ using pfebackend.Data;
 namespace pfebackend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250327143258_first_migration")]
-    partial class first_migration
+    [Migration("20250327224227_first")]
+    partial class first
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -395,7 +395,7 @@ namespace pfebackend.Migrations
             modelBuilder.Entity("pfebackend.Models.Budget", b =>
                 {
                     b.HasOne("pfebackend.Models.BudgetPeriod", "BudgetPeriod")
-                        .WithMany()
+                        .WithMany("Budgets")
                         .HasForeignKey("BudgetPeriodId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -423,6 +423,11 @@ namespace pfebackend.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("pfebackend.Models.BudgetPeriod", b =>
+                {
+                    b.Navigation("Budgets");
                 });
 #pragma warning restore 612, 618
         }

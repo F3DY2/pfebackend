@@ -13,7 +13,6 @@ namespace pfebackend.DTOs
         [Required]
         public float Income { get; set; }
 
-        [Required]
         public float Savings { get; set; }
 
         [Required]
@@ -24,7 +23,7 @@ namespace pfebackend.DTOs
         [Required]
         public string UserId { get; set; }
 
-        public List<BudgetDto> Budgets { get; set; }
+        public List<BudgetDto>? Budgets { get; set; }
 
 
     }

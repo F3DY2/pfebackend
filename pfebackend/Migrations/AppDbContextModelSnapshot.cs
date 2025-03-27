@@ -392,7 +392,7 @@ namespace pfebackend.Migrations
             modelBuilder.Entity("pfebackend.Models.Budget", b =>
                 {
                     b.HasOne("pfebackend.Models.BudgetPeriod", "BudgetPeriod")
-                        .WithMany()
+                        .WithMany("Budgets")
                         .HasForeignKey("BudgetPeriodId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -420,6 +420,11 @@ namespace pfebackend.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("pfebackend.Models.BudgetPeriod", b =>
+                {
+                    b.Navigation("Budgets");
                 });
 #pragma warning restore 612, 618
         }

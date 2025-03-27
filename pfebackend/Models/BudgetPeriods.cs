@@ -23,7 +23,6 @@ namespace pfebackend.Models
         [Required]
         public float Income { get; set; }
 
-        [Required]
         public float Savings { get; set; }
 
         [Required]
