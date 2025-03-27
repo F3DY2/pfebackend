@@ -14,14 +14,10 @@ namespace pfebackend.Models
         [Required]
         public float AlertValue { get; set; }
         [Required]
-        public DateOnly StartDate { get; set; }
-        [Required]
-        public DateOnly EndDate { get; set; }
-        [Required]
-        public string UserId { get; set; }
+        public int BudgetPeriodId { get; set; }
 
-        [ForeignKey("UserId")]
-        public User User { get; set; }
+        [ForeignKey("BudgetPeriodId")]
+        public BudgetPeriod BudgetPeriod { get; set; }
 
     }
 }
