@@ -23,5 +23,9 @@ namespace pfebackend.DTOs
         public DateTime EndDate { get; set; }
         [Required]
         public string UserId { get; set; }
+
+        public List<BudgetDto> Budgets { get; set; }
+
+
     }
 }

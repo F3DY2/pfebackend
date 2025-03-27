@@ -18,18 +18,27 @@ namespace pfebackend.Services
         public async Task<List<BudgetPeriodDto>> GetBudgetPeriodsAsync()
         {
             return await _context.BudgetPeriods
-                       .Select(bp => new BudgetPeriodDto
-                       {
-                           Id = bp.Id,
-                           Period = bp.Period,
-                           Income = bp.Income,
-                           Savings = bp.Savings,
-                           StartDate = bp.StartDate,
-                           EndDate = bp.EndDate,
-                           UserId = bp.UserId
-                       })
-                       .ToListAsync();
+                .Select(bp => new BudgetPeriodDto
+                {
+                    Id = bp.Id,
+                    Period = bp.Period,
+                    Income = bp.Income,
+                    Savings = bp.Savings,
+                    StartDate = bp.StartDate,
+                    EndDate = bp.EndDate,
+                    UserId = bp.UserId,
+                    Budgets = bp.Budgets.Select(b => new BudgetDto
+                    {
+                        Id = b.Id,
+                        Category = b.Category,
+                        LimitValue = b.LimitValue,
+                        AlertValue = b.AlertValue,
+                        BudgetPeriodId = b.BudgetPeriodId
+                    }).ToList()
+                })
+                .ToListAsync();
         }
+
 
 
         public async Task<BudgetPeriodDto> GetBudgetPeriodAsync(int id)

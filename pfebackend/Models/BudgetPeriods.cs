@@ -34,7 +34,8 @@ namespace pfebackend.Models
         [Required]
         public string UserId { get; set; }
         [ForeignKey("UserId")]
-        public User User { get; set; }
 
+        public User User { get; set; }
+        public ICollection<Budget> Budgets { get; set; } = new List<Budget>();
     }
 }
