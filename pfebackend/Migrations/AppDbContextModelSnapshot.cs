@@ -22,40 +22,6 @@ namespace pfebackend.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("BudgetPeriod", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("EndDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<float>("Income")
-                        .HasColumnType("real");
-
-                    b.Property<int>("Period")
-                        .HasColumnType("int");
-
-                    b.Property<float>("Savings")
-                        .HasColumnType("real");
-
-                    b.Property<DateTime>("StartDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("BudgetPeriod");
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
@@ -290,6 +256,40 @@ namespace pfebackend.Migrations
                     b.ToTable("Budgets");
                 });
 
+            modelBuilder.Entity("pfebackend.Models.BudgetPeriod", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<float>("Income")
+                        .HasColumnType("real");
+
+                    b.Property<int>("Period")
+                        .HasColumnType("int");
+
+                    b.Property<float>("Savings")
+                        .HasColumnType("real");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("BudgetPeriods");
+                });
+
             modelBuilder.Entity("pfebackend.Models.Expense", b =>
                 {
                     b.Property<int>("Id")
@@ -336,17 +336,6 @@ namespace pfebackend.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.HasDiscriminator().HasValue("User");
-                });
-
-            modelBuilder.Entity("BudgetPeriod", b =>
-                {
-                    b.HasOne("pfebackend.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -402,13 +391,24 @@ namespace pfebackend.Migrations
 
             modelBuilder.Entity("pfebackend.Models.Budget", b =>
                 {
-                    b.HasOne("BudgetPeriod", "BudgetPeriod")
-                        .WithMany("Budgets")
+                    b.HasOne("pfebackend.Models.BudgetPeriod", "BudgetPeriod")
+                        .WithMany()
                         .HasForeignKey("BudgetPeriodId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("BudgetPeriod");
+                });
+
+            modelBuilder.Entity("pfebackend.Models.BudgetPeriod", b =>
+                {
+                    b.HasOne("pfebackend.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("pfebackend.Models.Expense", b =>
@@ -420,11 +420,6 @@ namespace pfebackend.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("BudgetPeriod", b =>
-                {
-                    b.Navigation("Budgets");
                 });
 #pragma warning restore 612, 618
         }

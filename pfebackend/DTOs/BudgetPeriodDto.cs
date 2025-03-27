@@ -1,21 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using pfebackend.Models;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using pfebackend.Models;
 
-namespace pfebackend.Models
+namespace pfebackend.DTOs
 {
-    public enum BudgetPeriodType
-    {
-        Weekly,
-        Monthly
-    }
-
-    public class BudgetPeriod
-    {
-        [Key]
-        public int Id { get; set; }
+    public class BudgetPeriodDto
+    {   
+        public int? Id { get; set; }
 
         [Required]
         public BudgetPeriodType Period { get; set; }
@@ -33,8 +23,5 @@ namespace pfebackend.Models
         public DateTime EndDate { get; set; }
         [Required]
         public string UserId { get; set; }
-        [ForeignKey("UserId")]
-        public User User { get; set; }
-
     }
 }

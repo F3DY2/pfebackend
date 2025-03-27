@@ -160,23 +160,23 @@ namespace pfebackend.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Budgets",
+                name: "BudgetPeriods",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Category = table.Column<int>(type: "int", nullable: false),
-                    LimitValue = table.Column<float>(type: "real", nullable: false),
-                    AlertValue = table.Column<float>(type: "real", nullable: false),
-                    StartDate = table.Column<DateOnly>(type: "date", nullable: false),
-                    EndDate = table.Column<DateOnly>(type: "date", nullable: false),
+                    Period = table.Column<int>(type: "int", nullable: false),
+                    Income = table.Column<float>(type: "real", nullable: false),
+                    Savings = table.Column<float>(type: "real", nullable: false),
+                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    EndDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Budgets", x => x.Id);
+                    table.PrimaryKey("PK_BudgetPeriods", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Budgets_AspNetUsers_UserId",
+                        name: "FK_BudgetPeriods_AspNetUsers_UserId",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
@@ -202,6 +202,28 @@ namespace pfebackend.Migrations
                         name: "FK_Expenses_AspNetUsers_UserId",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Budgets",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Category = table.Column<int>(type: "int", nullable: false),
+                    LimitValue = table.Column<float>(type: "real", nullable: false),
+                    AlertValue = table.Column<float>(type: "real", nullable: false),
+                    BudgetPeriodId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Budgets", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Budgets_BudgetPeriods_BudgetPeriodId",
+                        column: x => x.BudgetPeriodId,
+                        principalTable: "BudgetPeriods",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -246,9 +268,14 @@ namespace pfebackend.Migrations
                 filter: "[NormalizedUserName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Budgets_UserId",
-                table: "Budgets",
+                name: "IX_BudgetPeriods_UserId",
+                table: "BudgetPeriods",
                 column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Budgets_BudgetPeriodId",
+                table: "Budgets",
+                column: "BudgetPeriodId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Expenses_UserId",
@@ -282,6 +309,9 @@ namespace pfebackend.Migrations
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
+
+            migrationBuilder.DropTable(
+                name: "BudgetPeriods");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");
