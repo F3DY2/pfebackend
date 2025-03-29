@@ -63,6 +63,39 @@ namespace pfebackend.Services
             return budgetPeriodDto;
         }
 
+
+        public async Task<IEnumerable<BudgetPeriodDto>> GetBudgetPeriodsByUserIdAsync(string userId)
+        {
+            var budgetPeriods = await _context.BudgetPeriods
+                                              .Where(bp => bp.UserId == userId)
+                                              .Include(bp => bp.Budgets) // Eager loading budgets
+                                              .ToListAsync();
+
+            if (budgetPeriods == null || !budgetPeriods.Any())
+            {
+                return Enumerable.Empty<BudgetPeriodDto>();
+            }
+
+            return budgetPeriods.Select(bp => new BudgetPeriodDto
+            {
+                Id = bp.Id,
+                Period = bp.Period,
+                Income = bp.Income,
+                Savings = bp.Savings,
+                StartDate = bp.StartDate,
+                EndDate = bp.EndDate,
+                UserId = bp.UserId,
+                Budgets = bp.Budgets?.Select(b => new BudgetDto
+                {
+                    Id = b.Id,
+                    Category = b.Category,
+                    LimitValue = b.LimitValue,
+                    AlertValue = b.AlertValue,
+                    BudgetPeriodId = b.BudgetPeriodId
+                }).ToList()
+            }).ToList();
+        }
+
         public async Task<bool> PutBudgetPeriodAsync(int id, BudgetPeriodDto budgetPeriodDto)
         {
             BudgetPeriod budgetPeriods = await _context.BudgetPeriods.FindAsync(id);
@@ -112,6 +145,29 @@ namespace pfebackend.Services
             _context.BudgetPeriods.Add(budgetPeriod);
             await _context.SaveChangesAsync();
             budgetPeriodDto.Id = budgetPeriod.Id;
+            if (budgetPeriodDto.Budgets != null && budgetPeriodDto.Budgets.Any())
+            {
+                var budgets = budgetPeriodDto.Budgets.Select(b => new Budget
+                {
+                    Category = b.Category,
+                    LimitValue = b.LimitValue,
+                    AlertValue = b.AlertValue,
+                    BudgetPeriodId = budgetPeriod.Id
+                }).ToList();
+
+                _context.Budgets.AddRange(budgets);
+                await _context.SaveChangesAsync();
+
+                budgetPeriodDto.Budgets = budgets.Select(b => new BudgetDto
+                {
+                    Id = b.Id,
+                    Category = b.Category,
+                    LimitValue = b.LimitValue,
+                    AlertValue = b.AlertValue,
+                    BudgetPeriodId = b.BudgetPeriodId
+                }).ToList();
+            }
+
             return (true, budgetPeriodDto);
         }
 

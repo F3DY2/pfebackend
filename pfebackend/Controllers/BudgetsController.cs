@@ -52,7 +52,13 @@ namespace pfebackend.Controllers
             return Ok(budgetDto);
         }
 
-       
+        [HttpGet("getUserBudgetsById/{userId}")]
+        public async Task<ActionResult<IEnumerable<BudgetDto>>> GetUserBudgets(string userId)
+        {
+            IEnumerable<BudgetDto>? budgets = await _budgetService.GetBudgetsByUserIdAsync(userId);
+            return Ok(budgets);
+        }
+
 
         // PUT: api/Budgets/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754

@@ -51,6 +51,27 @@ namespace pfebackend.Services
             return budgetDto;
         }
 
+        public async Task<IEnumerable<BudgetDto>> GetBudgetsByUserIdAsync(string userId)
+        {
+            var budgets = await _context.Budgets
+                                        .Where(b => b.BudgetPeriod.UserId == userId)
+                                        .ToListAsync();
+
+            if (budgets == null || !budgets.Any())
+            {
+                return Enumerable.Empty<BudgetDto>();
+            }
+
+            return budgets.Select(b => new BudgetDto
+            {
+                Id = b.Id,
+                Category = b.Category,
+                LimitValue = b.LimitValue,
+                AlertValue = b.AlertValue,
+                BudgetPeriodId = b.BudgetPeriodId
+            }).ToList();
+        }
+
         public async Task<bool> PutBudgetAsync(int id, BudgetDto budgetDto)
         {
             Budget budget = await _context.Budgets.FindAsync(id);

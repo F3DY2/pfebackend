@@ -44,7 +44,12 @@ namespace pfebackend.Controllers
             return Ok(budgetPeriodDto);
         }
 
-        
+        [HttpGet("getUserBudgetPeriodsById/{userId}")]
+        public async Task<ActionResult<IEnumerable<BudgetPeriodDto>>> GetUserBudgetPeriods(string userId)
+        {
+            IEnumerable<BudgetPeriodDto>? budgetPeriods = await _budgetPeriodService.GetBudgetPeriodsByUserIdAsync(userId);
+            return Ok(budgetPeriods);
+        }
 
         // PUT: api/BudgetPeriods/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754

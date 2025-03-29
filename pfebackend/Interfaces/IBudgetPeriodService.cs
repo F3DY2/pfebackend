@@ -8,6 +8,7 @@ namespace pfebackend.Interfaces
 
         Task<List<BudgetPeriodDto>> GetBudgetPeriodsAsync();
         Task<BudgetPeriodDto> GetBudgetPeriodAsync(int id);
+        Task<IEnumerable<BudgetPeriodDto>> GetBudgetPeriodsByUserIdAsync(string userId);
         Task<bool> PutBudgetPeriodAsync(int id, BudgetPeriodDto budgetPeriodDto);
         Task<(bool, BudgetPeriodDto)> PostBudgetPeriodAsync(BudgetPeriodDto budgetPeriodDto);
 
