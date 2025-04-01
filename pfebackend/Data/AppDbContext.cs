@@ -15,5 +15,7 @@ namespace pfebackend.Data
         public DbSet<Budget> Budgets { get; set; }
         public DbSet<BudgetPeriod> BudgetPeriods { get; set; }
 
+        public DbSet<Notification> Notifications { get; set; }
+
     }
 }
