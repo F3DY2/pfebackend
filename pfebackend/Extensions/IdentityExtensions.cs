@@ -54,7 +54,13 @@ namespace pfebackend.Extensions
                 };
             });
 
-
+            services.AddAuthorization(options =>
+            {
+                options.FallbackPolicy = new AuthorizationPolicyBuilder()
+                  .AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme)
+                  .RequireAuthenticatedUser()
+                  .Build();
+            });
 
             return services;
         }
