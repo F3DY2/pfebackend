@@ -9,6 +9,7 @@
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public bool IsRead { get; set; } = false;
         public NotificationType Type { get; set; }
+        public int CategoryNum { get; set; } // Nouvelle propriété
     }
 
     public enum NotificationType

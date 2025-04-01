@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using pfebackend.Data;
+using pfebackend.DTOs;
 using pfebackend.Hubs;
 using pfebackend.Interfaces;
 using pfebackend.Models;
@@ -37,34 +38,44 @@ namespace pfebackend.Services
                 }
                 else
                 {
-                    return;
+                    return; // No notification needed
                 }
 
-                // Save to database
+                // Create and save notification
                 var notification = new Notification
                 {
                     UserId = userId,
                     Message = message,
-                    Type = type
+                    Type = type,
+                    CategoryNum = (int)category,
+                    CreatedAt = DateTime.UtcNow,
+                    IsRead = false
                 };
 
                 _context.Notifications.Add(notification);
                 await _context.SaveChangesAsync();
 
+                // Prepare DTO for SignalR
+                var notificationDto = new NotificationDto
+                {
+                    Id = notification.Id,
+                    UserId = notification.UserId,
+                    Message = notification.Message,
+                    CreatedAt = notification.CreatedAt,
+                    IsRead = notification.IsRead,
+                    Type = notification.Type.ToString(),
+                    CategoryNum = notification.CategoryNum
+                };
+
                 // Send via SignalR
                 await _hubContext.Clients.Group(userId)
-                    .SendAsync("ReceiveNotification", new
-                    {
-                        Id = notification.Id,
-                        Message = notification.Message,
-                        CreatedAt = notification.CreatedAt,
-                        IsRead = notification.IsRead,
-                        Type = notification.Type
-                    });
+                    .SendAsync("ReceiveNotification", notificationDto);
+
+                // Optional: Log the notification
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error sending notification: {ex.Message}");
+                throw; // Or handle differently based on your requirements
             }
         }
 
