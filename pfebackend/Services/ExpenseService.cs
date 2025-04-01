@@ -1,6 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 using pfebackend.Data;
 using pfebackend.DTOs;
+using pfebackend.Hubs;
 using pfebackend.Interfaces;
 using pfebackend.Models;
 
@@ -9,10 +11,12 @@ namespace pfebackend.Services
     public class ExpenseService : IExpenseService
     {
         private readonly AppDbContext _context;
+        private readonly INotificationService _notificationService;
 
-        public ExpenseService(AppDbContext context)
+        public ExpenseService(AppDbContext context,INotificationService notificationService)
         {
             _context = context;
+            _notificationService = notificationService;
         }
 
         public async Task<IEnumerable<ExpenseDto>> GetExpensesAsync()
@@ -98,30 +102,82 @@ namespace pfebackend.Services
 
         public async Task<(bool, string, ExpenseDto)> CreateExpenseAsync(ExpenseDto expenseDto)
         {
-            bool userExists = await _context.Users.AnyAsync(u => u.Id == expenseDto.UserId);
-            if (!userExists)
+            try
             {
-                return (false, "User with the provided ID does not exist.", null);
+                // 1. Validate input
+                if (expenseDto == null)
+                    return (false, "Expense data is required", null);
+
+                if (string.IsNullOrEmpty(expenseDto.UserId))
+                    return (false, "User ID is required", null);
+
+                if (expenseDto.Amount <= 0)
+                    return (false, "Amount must be greater than zero", null);
+
+                // 2. Verify user exists
+                bool userExists = await _context.Users.AnyAsync(u => u.Id == expenseDto.UserId);
+                if (!userExists)
+                    return (false, "User not found", null);
+
+                // 3. Create expense entity
+                var expense = new Expense
+                {
+                    Name = expenseDto.Name,
+                    Category = (Models.Category)expenseDto.Category,
+                    Date = expenseDto.Date,
+                    Amount = expenseDto.Amount,
+                    UserId = expenseDto.UserId
+                };
+
+                // 4. Save expense first
+                _context.Expenses.Add(expense);
+                await _context.SaveChangesAsync();
+                expenseDto.Id = expense.Id;
+
+                // 5. Check budget limits
+                var activeBudgets = await _context.Budgets
+                    .Include(b => b.BudgetPeriod)
+                    .Where(b => b.BudgetPeriod != null &&
+                              b.BudgetPeriod.UserId == expenseDto.UserId &&
+                              b.BudgetPeriod.StartDate <= DateTime.Now &&
+                              b.BudgetPeriod.EndDate >= DateTime.Now &&
+                              b.Category == (Models.Category)expenseDto.Category)
+                    .ToListAsync();
+
+                foreach (var budget in activeBudgets)
+                {
+                    if (budget?.BudgetPeriod == null) continue;
+
+                    try
+                    {
+                        float totalExpenses = await _context.Expenses
+                            .Where(e => e.UserId == expenseDto.UserId &&
+                                      e.Category == (Models.Category)expenseDto.Category &&
+                                      e.Date >= budget.BudgetPeriod.StartDate &&
+                                      e.Date <= budget.BudgetPeriod.EndDate)
+                            .SumAsync(e => e.Amount);
+
+                        // Use the notification service
+                        await _notificationService.SendBudgetNotification(
+                            expenseDto.UserId,
+                            (Models.Category)expenseDto.Category,
+                            totalExpenses,
+                            budget.LimitValue,
+                            budget.AlertValue);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error checking budget {budget.Id}: {ex.Message}");
+                    }
+                }
+
+                return (true, "Expense created successfully.", expenseDto);
             }
-
-            if (expenseDto.Amount < 0)
+            catch (Exception ex)
             {
-                return (false, "Amount must be greater than or equal to zero.", null);
+                Console.WriteLine($"Error in CreateExpenseAsync: {ex}");
+                return (false, "An error occurred while creating the expense", null);
             }
-            Expense expense = new Expense
-            {
-                Name = expenseDto.Name,
-                Category = (Models.Category)expenseDto.Category,
-                Date = expenseDto.Date,
-                Amount = expenseDto.Amount,
-                UserId = expenseDto.UserId
-            };
-
-            _context.Expenses.Add(expense);
-            await _context.SaveChangesAsync();
-            expenseDto.Id = expense.Id;
-
-            return (true, "Expense created successfully.", expenseDto);
         }
 
         public async Task<bool> DeleteExpenseAsync(int id)

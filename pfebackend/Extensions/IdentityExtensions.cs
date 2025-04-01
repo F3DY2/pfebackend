@@ -53,13 +53,7 @@ namespace pfebackend.Extensions
                     ClockSkew = TimeSpan.Zero
                 };
             });
-            services.AddAuthorization(options =>
-            {
-                options.FallbackPolicy = new AuthorizationPolicyBuilder()
-                  .AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme)
-                  .RequireAuthenticatedUser()
-                  .Build();
-            });
+
 
 
             return services;

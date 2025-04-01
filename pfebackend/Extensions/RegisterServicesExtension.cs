@@ -11,7 +11,8 @@ namespace pfebackend.Extensions
                     .AddScoped<IExpenseService, ExpenseService>()
                     .AddScoped<ICsvImportService, CsvImportService>()
                     .AddScoped<IBudgetPeriodService, BudgetPeriodService>()
-                    .AddScoped<IBudgetService, BudgetService>();
+                    .AddScoped<IBudgetService, BudgetService>()
+                    .AddScoped<INotificationService, NotificationService>();
             return services;
         }
     }

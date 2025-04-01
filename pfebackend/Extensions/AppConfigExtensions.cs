@@ -11,7 +11,8 @@ namespace pfebackend.Extensions
             app.UseCors(options =>
             options.WithOrigins("http://localhost:4200")
                    .AllowAnyMethod()
-                   .AllowAnyHeader());
+                   .AllowAnyHeader()
+                   .AllowCredentials());
             return app;
         }
         public static IServiceCollection AddAppConfig(

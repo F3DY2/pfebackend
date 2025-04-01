@@ -1,4 +1,6 @@
+using pfebackend.Data;
 using pfebackend.Extensions;
+using pfebackend.Hubs;
 using pfebackend.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,6 +24,8 @@ builder.Services.AddIdentityAuth(builder.Configuration);
 // Services
 builder.Services.InjectServices();
 builder.Services.InjectEmailService(builder.Configuration);
+// Add after builder.Services
+builder.Services.AddSignalR();
 
 var app = builder.Build();
 
@@ -30,11 +34,13 @@ app.ConfigureSwaggerExplorer()
    .AddIdentityAuthMiddlewares();
 
 app.UseHttpsRedirection();
-
+// Add before app.MapControllers()
+app.MapHub<NotificationHub>("/notificationHub");
 app.MapControllers();
 
 app.MapGroup("/api")
    .MapIdentityApi<User>();
+
 
 app.Run();
 
