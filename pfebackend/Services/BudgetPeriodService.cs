@@ -96,39 +96,53 @@ namespace pfebackend.Services
             }).ToList();
         }
 
-        public async Task<bool> PutBudgetPeriodAsync(int id, BudgetPeriodDto budgetPeriodDto)
+        public async Task<(bool, BudgetPeriodDto)> PutBudgetPeriodAsync(int id, BudgetPeriodDto budgetPeriodDto)
         {
-            BudgetPeriod budgetPeriods = await _context.BudgetPeriods.FindAsync(id);
-            if (budgetPeriods == null)
-                return false;
+            if (budgetPeriodDto == null || id != budgetPeriodDto.Id)
+                return (false, null);
 
-            budgetPeriods.Period = budgetPeriodDto.Period;
-            budgetPeriods.Income = budgetPeriodDto.Income;
-            budgetPeriods.Savings = budgetPeriodDto.Savings;
-            budgetPeriods.StartDate = budgetPeriodDto.StartDate;
-            budgetPeriods.EndDate = budgetPeriodDto.EndDate;
-            budgetPeriods.UserId = budgetPeriodDto.UserId;
+            var budgetPeriod = await _context.BudgetPeriods
+                .Include(bp => bp.Budgets)
+                .FirstOrDefaultAsync(bp => bp.Id == id);
 
-            _context.Entry(budgetPeriods).State = EntityState.Modified;
+            if (budgetPeriod == null)
+                return (false, null);
+
+            budgetPeriod.Period = budgetPeriodDto.Period;
+            budgetPeriod.Income = budgetPeriodDto.Income;
+            budgetPeriod.Savings = budgetPeriodDto.Savings;
+            budgetPeriod.StartDate = budgetPeriodDto.StartDate;
+            budgetPeriod.EndDate = budgetPeriodDto.EndDate;
+            budgetPeriod.UserId = budgetPeriodDto.UserId;
+
+            if (budgetPeriodDto.Budgets != null)
+            {
+                foreach (var budgetDto in budgetPeriodDto.Budgets)
+                {
+                    var existingBudget = budgetPeriod.Budgets
+                        .FirstOrDefault(b => b.Id == budgetDto.Id);
+
+                    if (existingBudget != null)
+                    {
+                        existingBudget.Category = budgetDto.Category;
+                        existingBudget.LimitValue = budgetDto.LimitValue;
+                        existingBudget.AlertValue = budgetDto.AlertValue;
+                        existingBudget.BudgetPeriodId = id;
+                    }
+                }
+            }
 
             try
             {
                 await _context.SaveChangesAsync();
-                budgetPeriodDto.Id = budgetPeriods.Id;
+                return (true, budgetPeriodDto);
             }
             catch (DbUpdateConcurrencyException)
             {
                 if (!BudgetPeriodExists(id))
-                {
-                    return false;
-                }
-                else
-                {
-                    throw;
-                }
+                    return (false, null);
+                throw;
             }
-
-            return true;
         }
 
         public async Task<(bool, BudgetPeriodDto)> PostBudgetPeriodAsync(BudgetPeriodDto budgetPeriodDto)

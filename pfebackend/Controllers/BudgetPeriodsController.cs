@@ -61,14 +61,17 @@ namespace pfebackend.Controllers
                 return BadRequest();
             }
 
-            bool isUpdated = await _budgetPeriodService.PutBudgetPeriodAsync(id,budgetPeriodDto);
+            var (success, updatedDto) = await _budgetPeriodService.PutBudgetPeriodAsync(id, budgetPeriodDto);
 
-            if (!isUpdated) { return BadRequest(); }
+            if (!success)
+            {
+                return NotFound();
+            }
 
-            return NoContent();
+            return Ok(updatedDto);
         }
 
-       
+
 
         // POST: api/BudgetPeriods
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
