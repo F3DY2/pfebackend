@@ -4,7 +4,8 @@ namespace pfebackend.Interfaces
 {
     public interface INotificationService
     {
-        Task<IEnumerable<Notification>> GetUserNotifications(bool unreadOnly);
-        Task<bool> MarkNotificationAsRead(int id);
+        Task SendBudgetNotification(string userId, Category category, float totalExpenses, float limitValue, float alertValue);
+        Task<IEnumerable<Notification>> FetchNotifications(bool unreadOnly);
+        Task<bool> MarkNotificationAsReadAsync(int id);
     }
 }
