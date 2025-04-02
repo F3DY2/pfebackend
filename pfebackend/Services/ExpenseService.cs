@@ -5,6 +5,10 @@ using pfebackend.DTOs;
 using pfebackend.Hubs;
 using pfebackend.Interfaces;
 using pfebackend.Models;
+using EmailService;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages;
+
 
 namespace pfebackend.Services
 {
@@ -12,11 +16,15 @@ namespace pfebackend.Services
     {
         private readonly AppDbContext _context;
         private readonly INotificationService _notificationService;
+        private readonly IEmailSender _emailSender;
+        private readonly UserManager<User> _userManager;
 
-        public ExpenseService(AppDbContext context,INotificationService notificationService)
+        public ExpenseService(AppDbContext context,INotificationService notificationService, IEmailSender emailSender, UserManager<User> userManager)
         {
             _context = context;
             _notificationService = notificationService;
+            _emailSender = emailSender;
+            _userManager = userManager;
         }
 
         public async Task<IEnumerable<ExpenseDto>> GetExpensesAsync()
@@ -114,9 +122,13 @@ namespace pfebackend.Services
                 if (expenseDto.Amount <= 0)
                     return (false, "Amount must be greater than zero", null);
 
-                // 2. Verify user exists
-                bool userExists = await _context.Users.AnyAsync(u => u.Id == expenseDto.UserId);
-                if (!userExists)
+                // 2. Verify user exists and get user email
+                var user = await _context.Users
+                    .Where(u => u.Id == expenseDto.UserId)
+                    .Select(u => new { u.Email, u.UserName })
+                    .FirstOrDefaultAsync();
+
+                if (user == null)
                     return (false, "User not found", null);
 
                 // 3. Create expense entity
@@ -164,6 +176,19 @@ namespace pfebackend.Services
                             totalExpenses,
                             budget.LimitValue,
                             budget.AlertValue);
+
+                        // Create email message with current amount
+                        string categoryName = Enum.GetName(typeof(Models.Category), expenseDto.Category);
+                        string emailSubject = "Budget Alert Notification";
+                        string emailContent = $"Approaching budget limit for {categoryName}! " +
+                                            $"Limit: {budget.LimitValue}, Current: {totalExpenses}";
+
+                        Message message = new Message(
+                            new[] { user.Email }, // Utilisez l'email récupéré
+                            emailSubject,
+                            emailContent);
+
+                        _emailSender.SendEmail(message);
                     }
                     catch (Exception ex)
                     {
@@ -179,7 +204,6 @@ namespace pfebackend.Services
                 return (false, "An error occurred while creating the expense", null);
             }
         }
-
         public async Task<bool> DeleteExpenseAsync(int id)
         {
             Expense expense = await _context.Expenses.FindAsync(id);
