@@ -15,6 +15,7 @@
     public enum NotificationType
     {
         BudgetAlert,
+        BudgetWarning,
         System,
         Other
     }
