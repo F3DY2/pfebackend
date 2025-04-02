@@ -9,5 +9,6 @@ namespace pfebackend.Interfaces
                                    NotificationType type, Category category);
         Task<IEnumerable<Notification>> FetchNotifications(bool unreadOnly);
         Task<bool> MarkNotificationAsReadAsync(int id);
+        Task<bool> DeleteNotificationAsync(int id);
     }
 }

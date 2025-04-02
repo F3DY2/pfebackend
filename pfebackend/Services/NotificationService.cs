@@ -79,5 +79,18 @@ namespace pfebackend.Services
             await _context.SaveChangesAsync();
             return true;
         }
+        public async Task<bool> DeleteNotificationAsync(int id)
+        {
+            var notification = await _context.Notifications.FindAsync(id);
+            if (notification == null)
+            {
+                return false;
+            }
+
+            _context.Notifications.Remove(notification);
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
     }
 }

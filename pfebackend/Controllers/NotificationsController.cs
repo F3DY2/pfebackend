@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using pfebackend.Data;
 using pfebackend.Interfaces;
 using pfebackend.Models;
+using pfebackend.Services;
 
 namespace pfebackend.Controllers
 {
@@ -35,6 +36,16 @@ namespace pfebackend.Controllers
         {
             var success = await _notificationService.MarkNotificationAsReadAsync(id);
             return success ? Ok() : NotFound();
+        }
+        // DELETE: api/Notifications/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteNotification(int id)
+        {
+            bool isDeleted = await _notificationService.DeleteNotificationAsync(id);
+
+            if (isDeleted == false) { return BadRequest(); }
+
+            return NoContent();
         }
     }
 }
