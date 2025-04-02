@@ -110,99 +110,142 @@ namespace pfebackend.Services
 
         public async Task<(bool, string, ExpenseDto)> CreateExpenseAsync(ExpenseDto expenseDto)
         {
-            try
+            // 1. Validate input
+            var validation = await ValidateExpenseCreation(expenseDto);
+            if (!validation.isValid)
+                return (false, validation.error, null);
+
+            // 2. Create and save expense
+            var expense = await CreateAndSaveExpense(expenseDto);
+            expenseDto.Id = expense.Id;
+
+            // 3. Check budget limits and send alerts
+            await CheckBudgetLimitsAndNotify(expenseDto);
+
+            return (true, "Expense created successfully.", expenseDto);
+        }
+
+        private async Task<(bool isValid, string error)> ValidateExpenseCreation(ExpenseDto dto)
+        {
+            if (dto == null) return (false, "Expense data is required");
+            if (string.IsNullOrEmpty(dto.UserId)) return (false, "User ID is required");
+            if (dto.Amount <= 0) return (false, "Amount must be greater than zero");
+            if (!await UserExists(dto.UserId)) return (false, "User not found");
+            return (true, null);
+        }
+
+        private async Task<Expense> CreateAndSaveExpense(ExpenseDto dto)
+        {
+            var expense = new Expense
             {
-                // 1. Validate input
-                if (expenseDto == null)
-                    return (false, "Expense data is required", null);
+                Name = dto.Name,
+                Category = (Category)dto.Category,
+                Date = dto.Date,
+                Amount = dto.Amount,
+                UserId = dto.UserId
+            };
 
-                if (string.IsNullOrEmpty(expenseDto.UserId))
-                    return (false, "User ID is required", null);
+            _context.Expenses.Add(expense);
+            await _context.SaveChangesAsync();
+            return expense;
+        }
 
-                if (expenseDto.Amount <= 0)
-                    return (false, "Amount must be greater than zero", null);
+        private async Task CheckBudgetLimitsAndNotify(ExpenseDto dto)
+        {
+            var activeBudgets = await GetActiveBudgetsForUser(dto.UserId, (Category)dto.Category);
 
-                // 2. Verify user exists and get user email
-                var user = await _context.Users
-                    .Where(u => u.Id == expenseDto.UserId)
-                    .Select(u => new { u.Email, u.UserName })
-                    .FirstOrDefaultAsync();
-
-                if (user == null)
-                    return (false, "User not found", null);
-
-                // 3. Create expense entity
-                var expense = new Expense
-                {
-                    Name = expenseDto.Name,
-                    Category = (Models.Category)expenseDto.Category,
-                    Date = expenseDto.Date,
-                    Amount = expenseDto.Amount,
-                    UserId = expenseDto.UserId
-                };
-
-                // 4. Save expense first
-                _context.Expenses.Add(expense);
-                await _context.SaveChangesAsync();
-                expenseDto.Id = expense.Id;
-
-                // 5. Check budget limits
-                var activeBudgets = await _context.Budgets
-                    .Include(b => b.BudgetPeriod)
-                    .Where(b => b.BudgetPeriod != null &&
-                              b.BudgetPeriod.UserId == expenseDto.UserId &&
-                              b.BudgetPeriod.StartDate <= DateTime.Now &&
-                              b.BudgetPeriod.EndDate >= DateTime.Now &&
-                              b.Category == (Models.Category)expenseDto.Category)
-                    .ToListAsync();
-
-                foreach (var budget in activeBudgets)
-                {
-                    if (budget?.BudgetPeriod == null) continue;
-
-                    try
-                    {
-                        float totalExpenses = await _context.Expenses
-                            .Where(e => e.UserId == expenseDto.UserId &&
-                                      e.Category == (Models.Category)expenseDto.Category &&
-                                      e.Date >= budget.BudgetPeriod.StartDate &&
-                                      e.Date <= budget.BudgetPeriod.EndDate)
-                            .SumAsync(e => e.Amount);
-
-                        // Use the notification service
-                        await _notificationService.SendBudgetNotification(
-                            expenseDto.UserId,
-                            (Models.Category)expenseDto.Category,
-                            totalExpenses,
-                            budget.LimitValue,
-                            budget.AlertValue);
-
-                        // Create email message with current amount
-                        string categoryName = Enum.GetName(typeof(Models.Category), expenseDto.Category);
-                        string emailSubject = "Budget Alert Notification";
-                        string emailContent = $"Approaching budget limit for {categoryName}! " +
-                                            $"Limit: {budget.LimitValue}, Current: {totalExpenses}";
-
-                        Message message = new Message(
-                            new[] { user.Email }, // Utilisez l'email récupéré
-                            emailSubject,
-                            emailContent);
-
-                        _emailSender.SendEmail(message);
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Error checking budget {budget.Id}: {ex.Message}");
-                    }
-                }
-
-                return (true, "Expense created successfully.", expenseDto);
-            }
-            catch (Exception ex)
+            foreach (var budget in activeBudgets)
             {
-                Console.WriteLine($"Error in CreateExpenseAsync: {ex}");
-                return (false, "An error occurred while creating the expense", null);
+                if (budget?.BudgetPeriod == null) continue;
+
+                float totalExpenses = await CalculateTotalExpenses(
+                    dto.UserId,
+                    (Category)dto.Category,
+                    budget.BudgetPeriod.StartDate,
+                    budget.BudgetPeriod.EndDate);
+
+                await HandleBudgetAlerts(
+                    dto.UserId,
+                    (Category)dto.Category,
+                    totalExpenses,
+                    budget.LimitValue,
+                    budget.AlertValue,
+                    dto.Date,
+                    budget.BudgetPeriod);
             }
+        }
+
+        private async Task<List<Budget>> GetActiveBudgetsForUser(string userId, Category category)
+        {
+            return await _context.Budgets
+                .Include(b => b.BudgetPeriod)
+                .Where(b => b.BudgetPeriod != null &&
+                          b.BudgetPeriod.UserId == userId &&
+                          b.BudgetPeriod.StartDate <= DateTime.Now &&
+                          b.BudgetPeriod.EndDate >= DateTime.Now &&
+                          b.Category == category)
+                .ToListAsync();
+        }
+
+        private async Task<float> CalculateTotalExpenses(
+            string userId,
+            Category category,
+            DateTime startDate,
+            DateTime endDate)
+        {
+            return await _context.Expenses
+                .Where(e => e.UserId == userId &&
+                          e.Category == category &&
+                          e.Date >= startDate &&
+                          e.Date <= endDate)
+                .SumAsync(e => e.Amount);
+        }
+
+        private async Task HandleBudgetAlerts(
+            string userId,
+            Category category,
+            float totalExpenses,
+            float limitValue,
+            float alertValue,
+            DateTime expenseDate,
+            BudgetPeriod budgetPeriod)
+        {
+            if (expenseDate < budgetPeriod.StartDate || expenseDate > budgetPeriod.EndDate)
+            {
+                return;
+            }
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user?.Email == null) return;
+
+            if (totalExpenses > limitValue)
+            {
+                string message = $"Budget exceeded for {category}! Limit: {limitValue}, Current: {totalExpenses}";
+                await _notificationService.SendCategoryNotification(
+                    userId,
+                    message,
+                    NotificationType.BudgetAlert,
+                    category);
+                await SendBudgetEmail(user.Email, "Budget Limit Exceeded", message);
+            }
+            else if (totalExpenses > alertValue)
+            {
+                string message = $"Approaching budget limit for {category}! Limit: {limitValue}, Current: {totalExpenses}";
+                await _notificationService.SendCategoryNotification(
+                    userId,
+                    message,
+                    NotificationType.BudgetWarning,
+                    category);
+                await SendBudgetEmail(user.Email, "Budget Warning", message);
+            }
+        }
+
+        private async Task SendBudgetEmail(string email, string subject, string content)
+        {
+            var message = new Message(
+                new[] { email },
+                subject,
+                content);
+                _emailSender.SendEmail(message);
         }
         public async Task<bool> DeleteExpenseAsync(int id)
         {
