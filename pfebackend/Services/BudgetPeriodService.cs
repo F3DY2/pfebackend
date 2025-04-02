@@ -114,6 +114,7 @@ namespace pfebackend.Services
             try
             {
                 await _context.SaveChangesAsync();
+                budgetPeriodDto.Id = budgetPeriods.Id;
             }
             catch (DbUpdateConcurrencyException)
             {
