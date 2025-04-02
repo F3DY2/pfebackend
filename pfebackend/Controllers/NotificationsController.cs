@@ -5,53 +5,39 @@ using Microsoft.EntityFrameworkCore;
 using pfebackend.Data;
 using pfebackend.Interfaces;
 using pfebackend.Models;
+using pfebackend.Services;
 
 namespace pfebackend.Controllers
 {
-    // Controllers/NotificationsController.cs
     [Route("api/[controller]")]
     [Authorize]
     [ApiController]
     public class NotificationsController : ControllerBase
     {
         private readonly AppDbContext _context;
-        private readonly IUserService _userService;
+        private readonly NotificationService _notificationService;
 
-        public NotificationsController(AppDbContext context, IUserService userService)
+
+        public NotificationsController(AppDbContext context, NotificationService notificationService)
         {
             _context = context;
-            _userService = userService;
+            _notificationService = notificationService;
         }
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Notification>>> GetNotifications(bool unreadOnly = false)
         {
-            var userId = _userService.GetCurrentUserId();
-            var query = _context.Notifications
-                .Where(n => n.UserId == userId)
-                .OrderByDescending(n => n.CreatedAt);
-
-            if (unreadOnly)
-            {
-                query = query.Where(n => !n.IsRead) as IOrderedQueryable<Notification>;
-            }
-
-            return await query.ToListAsync();
+            var notifications = await _notificationService.GetUserNotifications(unreadOnly);
+            return Ok(notifications);
         }
 
         [HttpPut("{id}/mark-as-read")]
         public async Task<IActionResult> MarkAsRead(int id)
         {
-            var notification = await _context.Notifications.FindAsync(id);
-            if (notification == null)
-            {
-                return NotFound();
-            }
-
-            notification.IsRead = true;
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            bool isRead = await _notificationService.MarkNotificationAsRead(id);
+            if (isRead)
+                return Ok();
+            return NotFound();
         }
     }
 }
