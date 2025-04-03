@@ -152,7 +152,7 @@ namespace pfebackend.Services
 
         private async Task CheckBudgetLimitsAndNotify(ExpenseDto dto)
         {
-            var activeBudgets = await GetActiveBudgetsForUser(dto.UserId, (Category)dto.Category);
+            var activeBudgets = await GetActiveBudgetsForUser(dto.UserId, (Category)dto.Category,dto.Date);
 
             foreach (var budget in activeBudgets)
             {
@@ -175,14 +175,14 @@ namespace pfebackend.Services
             }
         }
 
-        private async Task<List<Budget>> GetActiveBudgetsForUser(string userId, Category category)
+        private async Task<List<Budget>> GetActiveBudgetsForUser(string userId, Category category, DateTime expenseDate)
         {
             return await _context.Budgets
                 .Include(b => b.BudgetPeriod)
                 .Where(b => b.BudgetPeriod != null &&
                           b.BudgetPeriod.UserId == userId &&
-                          b.BudgetPeriod.StartDate <= DateTime.Now &&
-                          b.BudgetPeriod.EndDate >= DateTime.Now &&
+                          b.BudgetPeriod.StartDate <= expenseDate &&
+                          b.BudgetPeriod.EndDate >= expenseDate &&
                           b.Category == category)
                 .ToListAsync();
         }
