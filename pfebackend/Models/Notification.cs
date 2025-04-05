@@ -1,6 +1,8 @@
-﻿namespace pfebackend.Models
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace pfebackend.Models
 {
-    // Models/Notification.cs
     public class Notification
     {
         public int Id { get; set; }
@@ -9,7 +11,11 @@
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public bool IsRead { get; set; } = false;
         public NotificationType Type { get; set; }
-        public int CategoryNum { get; set; } // Nouvelle propriété
+        [Required]
+        public int CategoryId { get; set; }
+
+        [ForeignKey("CategoryId")]
+        public Category Category { get; set; }
     }
 
     public enum NotificationType

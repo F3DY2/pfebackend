@@ -12,8 +12,8 @@ using pfebackend.Data;
 namespace pfebackend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250401213615_updateNotificationTable")]
-    partial class updateNotificationTable
+    [Migration("20250405144433_first_migration")]
+    partial class first_migration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -246,7 +246,7 @@ namespace pfebackend.Migrations
                     b.Property<int>("BudgetPeriodId")
                         .HasColumnType("int");
 
-                    b.Property<int>("Category")
+                    b.Property<int>("CategoryId")
                         .HasColumnType("int");
 
                     b.Property<float>("LimitValue")
@@ -255,6 +255,8 @@ namespace pfebackend.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("BudgetPeriodId");
+
+                    b.HasIndex("CategoryId");
 
                     b.ToTable("Budgets");
                 });
@@ -293,6 +295,65 @@ namespace pfebackend.Migrations
                     b.ToTable("BudgetPeriods");
                 });
 
+            modelBuilder.Entity("pfebackend.Models.Category", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Categories");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "Food"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Name = "Transport"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Name = "Entertainment"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Name = "Health"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Name = "Electronics"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Name = "Fashion"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            Name = "Housing"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            Name = "Others"
+                        });
+                });
+
             modelBuilder.Entity("pfebackend.Models.Expense", b =>
                 {
                     b.Property<int>("Id")
@@ -304,7 +365,7 @@ namespace pfebackend.Migrations
                     b.Property<float>("Amount")
                         .HasColumnType("real");
 
-                    b.Property<int>("Category")
+                    b.Property<int>("CategoryId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("Date")
@@ -321,6 +382,8 @@ namespace pfebackend.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CategoryId");
+
                     b.HasIndex("UserId");
 
                     b.ToTable("Expenses");
@@ -334,7 +397,7 @@ namespace pfebackend.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("CategoryNum")
+                    b.Property<int>("CategoryId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
@@ -355,6 +418,8 @@ namespace pfebackend.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
 
                     b.ToTable("Notifications");
                 });
@@ -433,7 +498,15 @@ namespace pfebackend.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("pfebackend.Models.Category", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("BudgetPeriod");
+
+                    b.Navigation("Category");
                 });
 
             modelBuilder.Entity("pfebackend.Models.BudgetPeriod", b =>
@@ -449,13 +522,32 @@ namespace pfebackend.Migrations
 
             modelBuilder.Entity("pfebackend.Models.Expense", b =>
                 {
+                    b.HasOne("pfebackend.Models.Category", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("pfebackend.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.Navigation("Category");
+
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("pfebackend.Models.Notification", b =>
+                {
+                    b.HasOne("pfebackend.Models.Category", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Category");
                 });
 
             modelBuilder.Entity("pfebackend.Models.BudgetPeriod", b =>

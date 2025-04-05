@@ -7,7 +7,7 @@ using pfebackend.Models;
 
 namespace pfebackend.Services
 {
-    public class BudgetPeriodService: IBudgetPeriodService 
+    public class BudgetPeriodService : IBudgetPeriodService
     {
         private readonly AppDbContext _context;
 
@@ -15,9 +15,12 @@ namespace pfebackend.Services
         {
             _context = context;
         }
+
         public async Task<List<BudgetPeriodDto>> GetBudgetPeriodsAsync()
         {
             return await _context.BudgetPeriods
+                .Include(bp => bp.Budgets)
+                    .ThenInclude(b => b.Category)
                 .Select(bp => new BudgetPeriodDto
                 {
                     Id = bp.Id,
@@ -30,7 +33,8 @@ namespace pfebackend.Services
                     Budgets = bp.Budgets.Select(b => new BudgetDto
                     {
                         Id = b.Id,
-                        Category = b.Category,
+                        CategoryId = b.CategoryId,  // Changed from Category to CategoryId
+                        CategoryName = b.Category.Name,
                         LimitValue = b.LimitValue,
                         AlertValue = b.AlertValue,
                         BudgetPeriodId = b.BudgetPeriodId
@@ -39,13 +43,19 @@ namespace pfebackend.Services
                 .ToListAsync();
         }
 
-
-
         public async Task<BudgetPeriodDto> GetBudgetPeriodAsync(int id)
         {
-            var budgetPeriod = await _context.BudgetPeriods.FindAsync(id);
+            var budgetPeriod = await _context.BudgetPeriods
+                .Include(bp => bp.Budgets)
+                    .ThenInclude(b => b.Category)
+                .FirstOrDefaultAsync(bp => bp.Id == id);
 
-            BudgetPeriodDto budgetPeriodDto = new BudgetPeriodDto
+            if (budgetPeriod == null)
+            {
+                return null;
+            }
+
+            return new BudgetPeriodDto
             {
                 Id = budgetPeriod.Id,
                 Period = budgetPeriod.Period,
@@ -53,47 +63,45 @@ namespace pfebackend.Services
                 Savings = budgetPeriod.Savings,
                 StartDate = budgetPeriod.StartDate,
                 EndDate = budgetPeriod.EndDate,
-                UserId = budgetPeriod.UserId
-            };
-            if (budgetPeriod == null)
-            {
-                return null;
-            }
-
-            return budgetPeriodDto;
-        }
-
-
-        public async Task<IEnumerable<BudgetPeriodDto>> GetBudgetPeriodsByUserIdAsync(string userId)
-        {
-            var budgetPeriods = await _context.BudgetPeriods
-                                              .Where(bp => bp.UserId == userId)
-                                              .Include(bp => bp.Budgets) // Eager loading budgets
-                                              .ToListAsync();
-
-            if (budgetPeriods == null || !budgetPeriods.Any())
-            {
-                return Enumerable.Empty<BudgetPeriodDto>();
-            }
-
-            return budgetPeriods.Select(bp => new BudgetPeriodDto
-            {
-                Id = bp.Id,
-                Period = bp.Period,
-                Income = bp.Income,
-                Savings = bp.Savings,
-                StartDate = bp.StartDate,
-                EndDate = bp.EndDate,
-                UserId = bp.UserId,
-                Budgets = bp.Budgets?.Select(b => new BudgetDto
+                UserId = budgetPeriod.UserId,
+                Budgets = budgetPeriod.Budgets?.Select(b => new BudgetDto
                 {
                     Id = b.Id,
-                    Category = b.Category,
+                    CategoryId = b.CategoryId,  // Changed from Category to CategoryId
+                    CategoryName = b.Category.Name,
                     LimitValue = b.LimitValue,
                     AlertValue = b.AlertValue,
                     BudgetPeriodId = b.BudgetPeriodId
                 }).ToList()
-            }).ToList();
+            };
+        }
+
+        public async Task<IEnumerable<BudgetPeriodDto>> GetBudgetPeriodsByUserIdAsync(string userId)
+        {
+            return await _context.BudgetPeriods
+                .Where(bp => bp.UserId == userId)
+                .Include(bp => bp.Budgets)
+                    .ThenInclude(b => b.Category)
+                .Select(bp => new BudgetPeriodDto
+                {
+                    Id = bp.Id,
+                    Period = bp.Period,
+                    Income = bp.Income,
+                    Savings = bp.Savings,
+                    StartDate = bp.StartDate,
+                    EndDate = bp.EndDate,
+                    UserId = bp.UserId,
+                    Budgets = bp.Budgets.Select(b => new BudgetDto
+                    {
+                        Id = b.Id,
+                        CategoryId = b.CategoryId,  // Changed from Category to CategoryId
+                        CategoryName = b.Category.Name,
+                        LimitValue = b.LimitValue,
+                        AlertValue = b.AlertValue,
+                        BudgetPeriodId = b.BudgetPeriodId
+                    }).ToList()
+                })
+                .ToListAsync();
         }
 
         public async Task<(bool, BudgetPeriodDto)> PutBudgetPeriodAsync(int id, BudgetPeriodDto budgetPeriodDto)
@@ -108,6 +116,7 @@ namespace pfebackend.Services
             if (budgetPeriod == null)
                 return (false, null);
 
+            // Update main properties
             budgetPeriod.Period = budgetPeriodDto.Period;
             budgetPeriod.Income = budgetPeriodDto.Income;
             budgetPeriod.Savings = budgetPeriodDto.Savings;
@@ -115,6 +124,7 @@ namespace pfebackend.Services
             budgetPeriod.EndDate = budgetPeriodDto.EndDate;
             budgetPeriod.UserId = budgetPeriodDto.UserId;
 
+            // Update budgets if provided
             if (budgetPeriodDto.Budgets != null)
             {
                 foreach (var budgetDto in budgetPeriodDto.Budgets)
@@ -124,10 +134,19 @@ namespace pfebackend.Services
 
                     if (existingBudget != null)
                     {
-                        existingBudget.Category = budgetDto.Category;
+                        existingBudget.CategoryId = budgetDto.CategoryId;  // Changed from Category to CategoryId
                         existingBudget.LimitValue = budgetDto.LimitValue;
                         existingBudget.AlertValue = budgetDto.AlertValue;
-                        existingBudget.BudgetPeriodId = id;
+                    }
+                    else if (budgetDto.Id == 0) // New budget
+                    {
+                        _context.Budgets.Add(new Budget
+                        {
+                            CategoryId = budgetDto.CategoryId,
+                            LimitValue = budgetDto.LimitValue,
+                            AlertValue = budgetDto.AlertValue,
+                            BudgetPeriodId = id
+                        });
                     }
                 }
             }
@@ -147,8 +166,11 @@ namespace pfebackend.Services
 
         public async Task<(bool, BudgetPeriodDto)> PostBudgetPeriodAsync(BudgetPeriodDto budgetPeriodDto)
         {
-            if (budgetPeriodDto == null) { return (false, null); }
-            BudgetPeriod budgetPeriod = new BudgetPeriod
+            if (budgetPeriodDto == null)
+                return (false, null);
+
+            // Create main budget period
+            var budgetPeriod = new BudgetPeriod
             {
                 Period = budgetPeriodDto.Period,
                 Income = budgetPeriodDto.Income,
@@ -157,14 +179,16 @@ namespace pfebackend.Services
                 EndDate = budgetPeriodDto.EndDate,
                 UserId = budgetPeriodDto.UserId
             };
+
             _context.BudgetPeriods.Add(budgetPeriod);
             await _context.SaveChangesAsync();
-            budgetPeriodDto.Id = budgetPeriod.Id;
+
+            // Create budgets if provided
             if (budgetPeriodDto.Budgets != null && budgetPeriodDto.Budgets.Any())
             {
                 var budgets = budgetPeriodDto.Budgets.Select(b => new Budget
                 {
-                    Category = b.Category,
+                    CategoryId = b.CategoryId,  // Changed from Category to CategoryId
                     LimitValue = b.LimitValue,
                     AlertValue = b.AlertValue,
                     BudgetPeriodId = budgetPeriod.Id
@@ -176,24 +200,30 @@ namespace pfebackend.Services
                 budgetPeriodDto.Budgets = budgets.Select(b => new BudgetDto
                 {
                     Id = b.Id,
-                    Category = b.Category,
+                    CategoryId = b.CategoryId,  // Changed from Category to CategoryId
                     LimitValue = b.LimitValue,
                     AlertValue = b.AlertValue,
                     BudgetPeriodId = b.BudgetPeriodId
                 }).ToList();
             }
 
+            budgetPeriodDto.Id = budgetPeriod.Id;
             return (true, budgetPeriodDto);
         }
 
-
-
         public async Task<bool> DeleteBudgetPeriodAsync(int id)
         {
-            var budgetPeriod = await _context.BudgetPeriods.FindAsync(id);
+            var budgetPeriod = await _context.BudgetPeriods
+                .Include(bp => bp.Budgets)
+                .FirstOrDefaultAsync(bp => bp.Id == id);
+
             if (budgetPeriod == null)
-            {
                 return false;
+
+            // Remove associated budgets first
+            if (budgetPeriod.Budgets.Any())
+            {
+                _context.Budgets.RemoveRange(budgetPeriod.Budgets);
             }
 
             _context.BudgetPeriods.Remove(budgetPeriod);
@@ -201,7 +231,6 @@ namespace pfebackend.Services
 
             return true;
         }
-
 
         private bool BudgetPeriodExists(int id)
         {

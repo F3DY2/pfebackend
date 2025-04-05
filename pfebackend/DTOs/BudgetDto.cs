@@ -6,13 +6,17 @@ using System.ComponentModel.DataAnnotations;
 public class BudgetDto
 {
     public int? Id { get; set; }
+
     [Required]
-    public Category Category { get; set; }
+    public int CategoryId { get; set; }
+
+    public string? CategoryName { get; set; }
     [Required]
     public float LimitValue { get; set; }
+
     [Required]
     public float AlertValue { get; set; }
+
     [Required]
     public int BudgetPeriodId { get; set; }
-
 }

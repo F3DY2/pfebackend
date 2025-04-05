@@ -1,13 +1,10 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using EmailService;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using pfebackend.Data;
 using pfebackend.DTOs;
-using pfebackend.Hubs;
 using pfebackend.Interfaces;
 using pfebackend.Models;
-using EmailService;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages;
 
 
 namespace pfebackend.Services
@@ -19,7 +16,7 @@ namespace pfebackend.Services
         private readonly IEmailSender _emailSender;
         private readonly UserManager<User> _userManager;
 
-        public ExpenseService(AppDbContext context,INotificationService notificationService, IEmailSender emailSender, UserManager<User> userManager)
+        public ExpenseService(AppDbContext context, INotificationService notificationService, IEmailSender emailSender, UserManager<User> userManager)
         {
             _context = context;
             _notificationService = notificationService;
@@ -34,7 +31,8 @@ namespace pfebackend.Services
                 {
                     Id = e.Id,
                     Name = e.Name,
-                    Category = e.Category,
+                    CategoryId = e.CategoryId,
+                    CategoryName = e.Category.Name,
                     Date = e.Date,
                     Amount = e.Amount,
                     UserId = e.UserId,
@@ -51,7 +49,8 @@ namespace pfebackend.Services
             {
                 Id = expense.Id,
                 Name = expense.Name,
-                Category = expense.Category,
+                CategoryId = expense.CategoryId,
+                CategoryName = expense.Category.Name,
                 Date = expense.Date,
                 Amount = expense.Amount,
                 UserId = expense.UserId
@@ -65,20 +64,20 @@ namespace pfebackend.Services
 
             if (expenses == null || !expenses.Any())
             {
-                return Enumerable.Empty<ExpenseDto>(); 
+                return Enumerable.Empty<ExpenseDto>();
             }
 
             return expenses.Select(e => new ExpenseDto
             {
                 Id = e.Id,
                 Name = e.Name,
-                Category = e.Category,
+                CategoryId = e.CategoryId,
+                CategoryName = e.Category.Name,
                 Date = e.Date,
                 Amount = e.Amount,
                 UserId = e.UserId
             }).ToList();
         }
-
 
         public async Task<(bool, string)> UpdateExpenseAsync(int id, ExpenseDto expenseDto)
         {
@@ -90,7 +89,7 @@ namespace pfebackend.Services
                 return (false, $"Expense with ID {id} not found.");
 
             expense.Name = expenseDto.Name;
-            expense.Category = (Models.Category)expenseDto.Category;
+            expense.CategoryId = expenseDto.CategoryId;
             expense.Date = expenseDto.Date;
             expense.Amount = expenseDto.Amount;
             expense.UserId = expenseDto.UserId;
@@ -139,7 +138,7 @@ namespace pfebackend.Services
             var expense = new Expense
             {
                 Name = dto.Name,
-                Category = (Category)dto.Category,
+                CategoryId = dto.CategoryId,
                 Date = dto.Date,
                 Amount = dto.Amount,
                 UserId = dto.UserId
@@ -152,7 +151,8 @@ namespace pfebackend.Services
 
         private async Task CheckBudgetLimitsAndNotify(ExpenseDto dto)
         {
-            var activeBudgets = await GetActiveBudgetsForUser(dto.UserId, (Category)dto.Category,dto.Date);
+            var category = await _context.Categories.FindAsync(dto.CategoryId);
+            var activeBudgets = await GetActiveBudgetsForUser(dto.UserId, dto.CategoryId, dto.Date);
 
             foreach (var budget in activeBudgets)
             {
@@ -160,13 +160,13 @@ namespace pfebackend.Services
 
                 float totalExpenses = await CalculateTotalExpenses(
                     dto.UserId,
-                    (Category)dto.Category,
+                    dto.CategoryId,
                     budget.BudgetPeriod.StartDate,
                     budget.BudgetPeriod.EndDate);
 
                 await HandleBudgetAlerts(
                     dto.UserId,
-                    (Category)dto.Category,
+                    category.Name,
                     totalExpenses,
                     budget.LimitValue,
                     budget.AlertValue,
@@ -175,27 +175,28 @@ namespace pfebackend.Services
             }
         }
 
-        private async Task<List<Budget>> GetActiveBudgetsForUser(string userId, Category category, DateTime expenseDate)
+        private async Task<List<Budget>> GetActiveBudgetsForUser(string userId, int categoryId, DateTime expenseDate)
         {
             return await _context.Budgets
                 .Include(b => b.BudgetPeriod)
+                .Include(b => b.Category)
                 .Where(b => b.BudgetPeriod != null &&
                           b.BudgetPeriod.UserId == userId &&
                           b.BudgetPeriod.StartDate <= expenseDate &&
                           b.BudgetPeriod.EndDate >= expenseDate &&
-                          b.Category == category)
+                          b.CategoryId == categoryId)
                 .ToListAsync();
         }
 
         private async Task<float> CalculateTotalExpenses(
             string userId,
-            Category category,
+            int categoryId,
             DateTime startDate,
             DateTime endDate)
         {
             return await _context.Expenses
                 .Where(e => e.UserId == userId &&
-                          e.Category == category &&
+                          e.CategoryId == categoryId &&
                           e.Date >= startDate &&
                           e.Date <= endDate)
                 .SumAsync(e => e.Amount);
@@ -203,7 +204,7 @@ namespace pfebackend.Services
 
         private async Task HandleBudgetAlerts(
             string userId,
-            Category category,
+            string categoryName,
             float totalExpenses,
             float limitValue,
             float alertValue,
@@ -219,22 +220,22 @@ namespace pfebackend.Services
 
             if (totalExpenses > limitValue)
             {
-                string message = $"Budget exceeded for {category}! Limit: {limitValue}, Current: {totalExpenses}";
+                string message = $"Budget exceeded for {categoryName}! Limit: {limitValue}, Current: {totalExpenses}";
                 await _notificationService.SendCategoryNotification(
                     userId,
                     message,
                     NotificationType.BudgetAlert,
-                    category);
+                    categoryName);
                 await SendBudgetEmail(user.Email, "Budget Limit Exceeded", message);
             }
             else if (totalExpenses > alertValue)
             {
-                string message = $"Approaching budget limit for {category}! Limit: {limitValue}, Current: {totalExpenses}";
+                string message = $"Approaching budget limit for {categoryName}! Limit: {limitValue}, Current: {totalExpenses}";
                 await _notificationService.SendCategoryNotification(
                     userId,
                     message,
                     NotificationType.BudgetWarning,
-                    category);
+                    categoryName);
                 await SendBudgetEmail(user.Email, "Budget Warning", message);
             }
         }
@@ -245,7 +246,7 @@ namespace pfebackend.Services
                 new[] { email },
                 subject,
                 content);
-                _emailSender.SendEmail(message);
+            _emailSender.SendEmail(message);
         }
         public async Task<bool> DeleteExpenseAsync(int id)
         {

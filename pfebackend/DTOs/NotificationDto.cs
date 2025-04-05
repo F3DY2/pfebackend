@@ -10,9 +10,11 @@ namespace pfebackend.DTOs
         public DateTime CreatedAt { get; set; }
         public bool IsRead { get; set; }
         public NotificationType Type { get; set; }
-        public int CategoryNum { get; set; }
+        public int CategoryId { get; set; }
+        public string? CategoryName { get; set; }
 
-        public NotificationDto(Notification notification)
+
+        public NotificationDto(Notification notification, string? categoryName = null)
         {
             Id = notification.Id;
             UserId = notification.UserId;
@@ -20,7 +22,8 @@ namespace pfebackend.DTOs
             CreatedAt = notification.CreatedAt;
             IsRead = notification.IsRead;
             Type = notification.Type; 
-            CategoryNum = notification.CategoryNum;
+            CategoryId = notification.CategoryId;
+            CategoryName = categoryName;
         }
 
         public Notification ToEntity()
@@ -33,7 +36,7 @@ namespace pfebackend.DTOs
                 CreatedAt = this.CreatedAt,
                 IsRead = this.IsRead,
                 Type = this.Type,
-                CategoryNum = this.CategoryNum
+                CategoryId = this.CategoryId            
             };
         }
     }

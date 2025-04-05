@@ -9,7 +9,6 @@ using pfebackend.Models;
 
 namespace pfebackend.Services
 {
-    // Services/NotificationService.cs
     public class NotificationService : INotificationService
     {
         private readonly IHubContext<NotificationHub> _hubContext;
@@ -29,20 +28,19 @@ namespace pfebackend.Services
         }
 
         public async Task SendCategoryNotification(string userId, string message,
-                                               NotificationType type, Category category)
+                                               NotificationType type, string categoryName)
         {
-            await SendNotification(userId, message, type, category);
+            await SendNotification(userId, message, type, categoryName);
         }
 
         private async Task SendNotification(string userId, string message,
-                                         NotificationType type, Category? category)
+                                            NotificationType type, string? categoryName)
         {
             var notification = new Notification
             {
                 UserId = userId,
                 Message = message,
                 Type = type,
-                CategoryNum = (int)(category.HasValue ? category : null),
                 CreatedAt = DateTime.UtcNow,
                 IsRead = false
             };
@@ -51,8 +49,9 @@ namespace pfebackend.Services
             await _context.SaveChangesAsync();
 
             await _hubContext.Clients.Group(userId)
-                .SendAsync("ReceiveNotification", new NotificationDto(notification));
+                .SendAsync("ReceiveNotification", new NotificationDto(notification, categoryName));
         }
+
         public async Task<IEnumerable<Notification>> FetchNotifications(bool unreadOnly)
         {
             string userId = _userService.GetCurrentUserId();
@@ -67,6 +66,7 @@ namespace pfebackend.Services
 
             return await query.ToListAsync();
         }
+
         public async Task<bool> MarkNotificationAsReadAsync(int id)
         {
             var notification = await _context.Notifications.FindAsync(id);
@@ -79,6 +79,7 @@ namespace pfebackend.Services
             await _context.SaveChangesAsync();
             return true;
         }
+
         public async Task<bool> DeleteNotificationAsync(int id)
         {
             var notification = await _context.Notifications.FindAsync(id);

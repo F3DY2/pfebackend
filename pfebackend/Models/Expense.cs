@@ -13,9 +13,6 @@ namespace pfebackend.Models
         [Column(TypeName = "varchar(100)")] 
         public string Name { get; set; }
 
-        [Required(ErrorMessage = "Category is required.")]
-        public Category Category { get; set; }
-
         [Required(ErrorMessage = "Date is required.")]
         [DataType(DataType.Date, ErrorMessage = "Invalid date format.")]
         public DateTime Date { get; set; }
@@ -27,18 +24,11 @@ namespace pfebackend.Models
         public string UserId { get; set; } 
 
         [ForeignKey("UserId")]
-        public User User { get; set; } 
-    }
+        public User User { get; set; }
+        [Required]
+        public int CategoryId { get; set; }
 
-    public enum Category
-    {
-        Food,
-        Transport,
-        Entertainment,
-        Health,
-        Electronics,
-        Fashion,
-        Housing,
-        Others
+        [ForeignKey("CategoryId")]
+        public Category Category { get; set; }
     }
 }
