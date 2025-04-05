@@ -50,7 +50,7 @@ namespace pfebackend.Services
                 Id = expense.Id,
                 Name = expense.Name,
                 CategoryId = expense.CategoryId,
-                CategoryName = expense.Category.Name,
+                CategoryName = expense.Category?.Name,
                 Date = expense.Date,
                 Amount = expense.Amount,
                 UserId = expense.UserId
