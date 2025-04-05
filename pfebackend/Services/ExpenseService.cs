@@ -72,7 +72,7 @@ namespace pfebackend.Services
                 Id = e.Id,
                 Name = e.Name,
                 CategoryId = e.CategoryId,
-                CategoryName = e.Category.Name,
+                CategoryName = e.Category?.Name,
                 Date = e.Date,
                 Amount = e.Amount,
                 UserId = e.UserId
