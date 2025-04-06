@@ -59,6 +59,7 @@ namespace pfebackend.Services
         public async Task<IEnumerable<ExpenseDto>> GetExpensesByUserIdAsync(string userId)
         {
             var expenses = await _context.Expenses
+                                          .Include(b => b.Category)
                                           .Where(e => e.UserId == userId)
                                           .ToListAsync();
 
@@ -166,6 +167,7 @@ namespace pfebackend.Services
 
                 await HandleBudgetAlerts(
                     dto.UserId,
+                    category.Id,
                     category.Name,
                     totalExpenses,
                     budget.LimitValue,
@@ -204,6 +206,7 @@ namespace pfebackend.Services
 
         private async Task HandleBudgetAlerts(
             string userId,
+            int categoryId,
             string categoryName,
             float totalExpenses,
             float limitValue,
@@ -225,6 +228,7 @@ namespace pfebackend.Services
                     userId,
                     message,
                     NotificationType.BudgetAlert,
+                    categoryId,
                     categoryName);
                 await SendBudgetEmail(user.Email, "Budget Limit Exceeded", message);
             }
@@ -235,6 +239,7 @@ namespace pfebackend.Services
                     userId,
                     message,
                     NotificationType.BudgetWarning,
+                    categoryId,
                     categoryName);
                 await SendBudgetEmail(user.Email, "Budget Warning", message);
             }

@@ -24,22 +24,23 @@ namespace pfebackend.Services
 
         public async Task SendGeneralNotification(string userId, string message, NotificationType type)
         {
-            await SendNotification(userId, message, type, null);
+            await SendNotification(userId, message, type, null,null);
         }
 
         public async Task SendCategoryNotification(string userId, string message,
-                                               NotificationType type, string categoryName)
+                                               NotificationType type, int categoryId,string? categoryName)
         {
-            await SendNotification(userId, message, type, categoryName);
+            await SendNotification(userId, message, type, categoryId, categoryName);
         }
 
         private async Task SendNotification(string userId, string message,
-                                            NotificationType type, string? categoryName)
+                                            NotificationType type, int? categoryId, string? categoryName)
         {
             var notification = new Notification
             {
                 UserId = userId,
                 Message = message,
+                CategoryId = (int)categoryId,
                 Type = type,
                 CreatedAt = DateTime.UtcNow,
                 IsRead = false
