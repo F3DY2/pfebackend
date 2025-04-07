@@ -41,11 +41,20 @@ public class DashboardService : IDashboardService
             }
         }
 
-        //// Get all budgets for this period
-        //var budgets = await _context.Budgets
-        //    .Include(b => b.Category)
-        //    .Where(b => b.BudgetPeriodId == budgetPeriod.Id)
-        //    .ToListAsync();
+        // Get all budgets for this period
+        List<Budget> budgets = await _context.Budgets
+            .Include(b => b.Category)
+            .Where(b => b.BudgetPeriodId == budgetPeriod.Id)
+            .ToListAsync();
+        List<BudgetDto> budgetDtos = budgets.Select(b => new BudgetDto
+        {
+            Id = b.Id,
+            LimitValue = b.LimitValue,
+            AlertValue = b.AlertValue,
+            BudgetPeriodId = b.BudgetPeriodId,
+            CategoryId = b.CategoryId,
+            CategoryName = b.Category?.Name ?? string.Empty
+        }).ToList();
 
         // Get all expenses for this user within the period date range
         List<Expense> expenses = await _context.Expenses
@@ -102,7 +111,8 @@ public class DashboardService : IDashboardService
                 Income = budgetPeriod.Income,
                 Savings = budgetPeriod.Savings,
                 StartDate = budgetPeriod.StartDate,
-                EndDate = budgetPeriod.EndDate
+                EndDate = budgetPeriod.EndDate,
+                Budgets = budgetDtos,
             },
             Message = budgetPeriod.EndDate < currentDate ?
                 "Showing data for previous budget period" :
