@@ -23,6 +23,7 @@ namespace pfebackend.Models
         BudgetAlert,
         BudgetWarning,
         System,
-        Other
+        Other,
+        CategoryChange
     }
 }
