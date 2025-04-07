@@ -174,7 +174,7 @@ namespace pfebackend.Services
             {
                 Period = budgetPeriodDto.Period,
                 Income = budgetPeriodDto.Income,
-                Savings = budgetPeriodDto.Savings,
+                Savings = budgetPeriodDto.Income,
                 StartDate = budgetPeriodDto.StartDate,
                 EndDate = budgetPeriodDto.EndDate,
                 UserId = budgetPeriodDto.UserId
