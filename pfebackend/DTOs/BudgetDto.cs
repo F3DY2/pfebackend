@@ -17,6 +17,7 @@ public class BudgetDto
     [Required]
     public float AlertValue { get; set; }
 
+    public float? PercentageSpent { get; set; }
     [Required]
     public int BudgetPeriodId { get; set; }
 }

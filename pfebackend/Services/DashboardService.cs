@@ -40,22 +40,6 @@ public class DashboardService : IDashboardService
                 };
             }
         }
-
-        // Get all budgets for this period
-        List<Budget> budgets = await _context.Budgets
-            .Include(b => b.Category)
-            .Where(b => b.BudgetPeriodId == budgetPeriod.Id)
-            .ToListAsync();
-        List<BudgetDto> budgetDtos = budgets.Select(b => new BudgetDto
-        {
-            Id = b.Id,
-            LimitValue = b.LimitValue,
-            AlertValue = b.AlertValue,
-            BudgetPeriodId = b.BudgetPeriodId,
-            CategoryId = b.CategoryId,
-            CategoryName = b.Category?.Name ?? string.Empty
-        }).ToList();
-
         // Get all expenses for this user within the period date range
         List<Expense> expenses = await _context.Expenses
             .Include(e => e.Category)
@@ -63,6 +47,34 @@ public class DashboardService : IDashboardService
                         e.Date >= budgetPeriod.StartDate &&
                         e.Date <= budgetPeriod.EndDate)
             .ToListAsync();
+
+        // Get all budgets for this period
+        List<Budget> budgets = await _context.Budgets
+            .Include(b => b.Category)
+            .Where(b => b.BudgetPeriodId == budgetPeriod.Id)
+            .ToListAsync();
+
+        // Create a list of BudgetDto objects with calculated spent amounts
+        List<BudgetDto> budgetDtos = budgets.Select(b =>
+        {
+            var categoryExpenses = expenses
+                .Where(e => e.CategoryId == b.CategoryId)
+                .Sum(e => e.Amount);
+
+            float percentageSpent = b.LimitValue > 0 ?
+                (categoryExpenses / b.LimitValue * 100) : 0;
+
+            return new BudgetDto
+            {
+                Id = b.Id,
+                LimitValue = b.LimitValue,
+                AlertValue = b.AlertValue,
+                BudgetPeriodId = b.BudgetPeriodId,
+                CategoryId = b.CategoryId,
+                CategoryName = b.Category?.Name ?? string.Empty,
+                PercentageSpent = percentageSpent
+            };
+        }).ToList();
 
         // Calculate totals
         float totalBudget = budgetPeriod.Income;
