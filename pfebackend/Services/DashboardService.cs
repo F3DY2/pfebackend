@@ -82,10 +82,10 @@ public class DashboardService : IDashboardService
             .OrderByDescending(c => c.TotalAmount)
             .ToList();
 
-        // Get first 5 expenses (most recent)
+        // Get first 8 expenses (most recent)
         List<ExpenseDto> recentExpenses = expenses
             .OrderByDescending(e => e.Date)
-            .Take(10)
+            .Take(8)
             .Select(e => new ExpenseDto
             {
                 Id = e.Id,
