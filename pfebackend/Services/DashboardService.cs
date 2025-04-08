@@ -108,6 +108,17 @@ public class DashboardService : IDashboardService
                 CategoryName = e.Category.Name
             })
             .ToList();
+        List<ExpenseSumDto> dailyExpensesSum = await _context.Expenses
+            .Include(e => e.Category)
+            .Where(e => e.UserId == userId)
+            .GroupBy(e => new { Date = e.Date.Date, CategoryName = e.Category.Name })
+            .Select(g => new ExpenseSumDto
+            {
+                CategoryName = g.Key.CategoryName,
+                Date = g.Key.Date,
+                Amount = g.Sum(e => e.Amount),
+            })
+            .ToListAsync();
 
         return new DashboardDataDto
         {
@@ -116,6 +127,7 @@ public class DashboardService : IDashboardService
             BudgetLeft = budgetLeft,
             ExpensesByCategory = expensesByCategory,
             RecentExpenses = recentExpenses,
+            DailyExpensesSum= dailyExpensesSum,
             BudgetPeriod = new BudgetPeriodDto
             {
                 Id = budgetPeriod.Id,
