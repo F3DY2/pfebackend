@@ -13,13 +13,13 @@ namespace pfebackend.Controllers
     public class ExpensesController : ControllerBase
     {
         private readonly IExpenseService _expenseService;
-        //private readonly ICsvImportService _csvImportService;
+        private readonly ICsvImportService _csvImportService;
         private readonly IUserService _userService;
-        //, ICsvImportService csvImportService
-        public ExpensesController(IExpenseService expenseService, IUserService userService)
+        
+        public ExpensesController(IExpenseService expenseService, IUserService userService, ICsvImportService csvImportService)
         {
             _expenseService = expenseService;
-            //_csvImportService = csvImportService;
+            _csvImportService = csvImportService;
             _userService = userService;
         }
 
@@ -86,40 +86,40 @@ namespace pfebackend.Controllers
             return NoContent();
         }
 
-        //[HttpPost("import-csv")]
-        //public async Task<IActionResult> ImportCSVFile(IFormFile file)
-        //{
-        //    string path = "uploads/tempcsv.csv";
-        //    try
-        //    {
-        //        using (var stream = System.IO.File.Create(path))
-        //        {
-        //            await file.CopyToAsync(stream);
-        //        }
+        [HttpPost("import-csv")]
+        public async Task<IActionResult> ImportCSVFile(IFormFile file)
+        {
+            string path = "uploads/tempcsv.csv";
+            try
+            {
+                using (var stream = System.IO.File.Create(path))
+                {
+                    await file.CopyToAsync(stream);
+                }
 
-        //        var userId = _userService.GetCurrentUserId();
+                var userId = _userService.GetCurrentUserId();
 
-        //        var expenses = await _csvImportService.ImportExpensesFromCsvAsync(path);
+                var expenses = await _csvImportService.ImportExpensesFromCsvAsync(path);
 
-        //        foreach (var expense in expenses)
-        //        {
-        //            expense.UserId = userId;
-        //            await _expenseService.CreateExpenseAsync(expense);
-        //        }
+                foreach (var expense in expenses)
+                {
+                    expense.UserId = userId;
+                    await _expenseService.CreateExpenseAsync(expense);
+                }
 
-        //        return Ok(new { ImportResult = true });
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return BadRequest(new { ImportResult = false, Error = ex.Message });
-        //    }
-        //    finally
-        //    {
-        //        if (System.IO.File.Exists(path))
-        //        {
-        //            System.IO.File.Delete(path);
-        //        }
-        //    }
-        //}
+                return Ok(expenses);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { ImportResult = false, Error = ex.Message });
+            }
+            finally
+            {
+                if (System.IO.File.Exists(path))
+                {
+                    System.IO.File.Delete(path);
+                }
+            }
+        }
     }
 }

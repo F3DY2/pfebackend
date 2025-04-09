@@ -9,11 +9,12 @@ namespace pfebackend.Extensions
         {
             services.AddScoped<IUserService, UserService>()
                     .AddScoped<IExpenseService, ExpenseService>()
-                    //.AddScoped<ICsvImportService, CsvImportService>()
+                    .AddScoped<ICsvImportService, CsvImportService>()
                     .AddScoped<IBudgetPeriodService, BudgetPeriodService>()
                     .AddScoped<IBudgetService, BudgetService>()
                     .AddScoped<INotificationService, NotificationService>()
-                    .AddScoped<IDashboardService, DashboardService>();
+                    .AddScoped<IDashboardService, DashboardService>()
+                    .AddScoped<ICategoryService, CategoryService>();
             return services;
         }
     }

@@ -223,7 +223,7 @@ namespace pfebackend.Services
         {
             if (dto == null) return (false, "Expense data is required");
             if (string.IsNullOrEmpty(dto.UserId)) return (false, "User ID is required");
-            if (dto.Amount <= 0) return (false, "Amount must be greater than zero");
+            if (dto.Amount < 0) return (false, "Amount must be zero or greater than zero");
             if (!await UserExists(dto.UserId)) return (false, "User not found");
             return (true, null);
         }
