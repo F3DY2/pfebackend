@@ -122,7 +122,7 @@ public class DashboardService : IDashboardService
 
         List<DailyExpensesDto> expensesByDate = await _context.Expenses
             .Include(e => e.Category)
-            .GroupBy(e => e.Date)
+            .GroupBy(e => e.Date.Date)
             .Select(g => new DailyExpensesDto
             {
                 Date = g.Key,
@@ -133,8 +133,7 @@ public class DashboardService : IDashboardService
                                  CategoryId = cg.Key.CategoryId,
                                  CategoryName = cg.Key.Name,
                                  TotalAmount = cg.Sum(e => e.Amount),
-                                 Percentage = g.Sum(e => e.Amount) > 0 ?
-                                     (cg.Sum(e => e.Amount) / g.Sum(e => e.Amount) * 100) : 0
+                                
                              })
                              .OrderByDescending(c => c.TotalAmount)
                              .ToList()
