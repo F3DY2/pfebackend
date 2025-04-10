@@ -78,16 +78,17 @@ namespace pfebackend.Controllers
         [HttpPost]
         public async Task<ActionResult<BudgetPeriodDto>> PostBudgetPeriod(BudgetPeriodDto budgetPeriodDto)
         {
-            (bool isCreated, BudgetPeriodDto createdBudgeteDto) = await _budgetPeriodService.PostBudgetPeriodAsync(budgetPeriodDto);
-            if (isCreated == false) 
-            
-            { return BadRequest(); }
-            
+            var (success, message, result) = await _budgetPeriodService.PostBudgetPeriodAsync(budgetPeriodDto);
+
+            if (!success)
+            {
+                return BadRequest(message);
+            }
 
             return Ok(budgetPeriodDto);
         }
 
-        
+
 
         // DELETE: api/BudgetPeriods/5
         [HttpDelete("{id}")]

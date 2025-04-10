@@ -164,12 +164,47 @@ namespace pfebackend.Services
             }
         }
 
-        public async Task<(bool, BudgetPeriodDto)> PostBudgetPeriodAsync(BudgetPeriodDto budgetPeriodDto)
+        public async Task<(bool, string, BudgetPeriodDto)> PostBudgetPeriodAsync(BudgetPeriodDto budgetPeriodDto)
         {
             if (budgetPeriodDto == null)
-                return (false, null);
+                return (false, "Budget period data cannot be null", null);
 
-            // Create main budget period
+            // Validate date range (end date must be after start date)
+            if (budgetPeriodDto.StartDate >= budgetPeriodDto.EndDate)
+                return (false, "End date must be after start date", null);
+
+            // Check if this is a first-time user
+            bool isFirstPeriod = !await _context.BudgetPeriods
+                .AnyAsync(bp => bp.UserId == budgetPeriodDto.UserId);
+
+            if (isFirstPeriod)
+            {
+                // For first period, enforce max 29 days backdating
+                DateTime maxAllowedStartDate = DateTime.Now.AddMonths(-1);
+                if (budgetPeriodDto.StartDate < maxAllowedStartDate)
+                {
+                    return (false,
+                           $"For your first budget period, the start date cannot be before {maxAllowedStartDate:yyyy-MM-dd}",
+                           null);
+                }
+            }
+            else
+            {
+                // Existing users - enforce chronological order
+                var mostRecentPeriod = await _context.BudgetPeriods
+                    .Where(bp => bp.UserId == budgetPeriodDto.UserId)
+                    .OrderByDescending(bp => bp.StartDate)
+                    .FirstOrDefaultAsync();
+
+                if (mostRecentPeriod != null && budgetPeriodDto.StartDate <= mostRecentPeriod.EndDate)
+                {
+                    return (false,
+                           $"New budget period must start after {mostRecentPeriod.EndDate:yyyy-MM-dd}",
+                           null);
+                }
+            }
+
+            // Create and save the new budget period
             var budgetPeriod = new BudgetPeriod
             {
                 Period = budgetPeriodDto.Period,
@@ -188,7 +223,7 @@ namespace pfebackend.Services
             {
                 var budgets = budgetPeriodDto.Budgets.Select(b => new Budget
                 {
-                    CategoryId = b.CategoryId,  // Changed from Category to CategoryId
+                    CategoryId = b.CategoryId,
                     LimitValue = b.LimitValue,
                     AlertValue = b.AlertValue,
                     BudgetPeriodId = budgetPeriod.Id
@@ -200,7 +235,7 @@ namespace pfebackend.Services
                 budgetPeriodDto.Budgets = budgets.Select(b => new BudgetDto
                 {
                     Id = b.Id,
-                    CategoryId = b.CategoryId,  // Changed from Category to CategoryId
+                    CategoryId = b.CategoryId,
                     LimitValue = b.LimitValue,
                     AlertValue = b.AlertValue,
                     BudgetPeriodId = b.BudgetPeriodId
@@ -208,7 +243,7 @@ namespace pfebackend.Services
             }
 
             budgetPeriodDto.Id = budgetPeriod.Id;
-            return (true, budgetPeriodDto);
+            return (true, "Budget period created successfully", budgetPeriodDto);
         }
 
         public async Task<bool> DeleteBudgetPeriodAsync(int id)
