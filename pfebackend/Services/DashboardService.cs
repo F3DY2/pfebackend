@@ -120,11 +120,33 @@ public class DashboardService : IDashboardService
             })
             .ToListAsync();
 
+        List<DailyExpensesDto> expensesByDate = await _context.Expenses
+            .Include(e => e.Category)
+            .GroupBy(e => e.Date)
+            .Select(g => new DailyExpensesDto
+            {
+                Date = g.Key,
+                TotalExpensesForDate = g.Sum(e => e.Amount),
+                Categories = g.GroupBy(e => new { e.CategoryId, e.Category.Name })
+                             .Select(cg => new CategoryExpenseDto
+                             {
+                                 CategoryId = cg.Key.CategoryId,
+                                 CategoryName = cg.Key.Name,
+                                 TotalAmount = cg.Sum(e => e.Amount),
+                                 Percentage = g.Sum(e => e.Amount) > 0 ?
+                                     (cg.Sum(e => e.Amount) / g.Sum(e => e.Amount) * 100) : 0
+                             })
+                             .OrderByDescending(c => c.TotalAmount)
+                             .ToList()
+            })
+            .OrderBy(d => d.Date)
+            .ToListAsync();
         return new DashboardDataDto
         {
             TotalBudget = totalBudget,
             TotalExpenses = totalExpenses,
             BudgetLeft = budgetLeft,
+            ExpensesByDate = expensesByDate,
             ExpensesByCategory = expensesByCategory,
             RecentExpenses = recentExpenses,
             DailyExpensesSum= dailyExpensesSum,
