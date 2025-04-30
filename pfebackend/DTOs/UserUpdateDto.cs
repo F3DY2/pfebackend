@@ -8,5 +8,6 @@
         public string LastName { get; set; }
 
         public string PhoneNumber { get; set; }
+        public string? Avatar { get; set; }
     }
 }

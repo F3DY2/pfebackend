@@ -39,6 +39,7 @@ namespace pfebackend.Services
                 FirstName = userRegistrationModel.FirstName,
                 LastName = userRegistrationModel.LastName,
                 PhoneNumber = userRegistrationModel.PhoneNumber,
+                Avatar = userRegistrationModel.Avatar,
             };
 
             return await _userManager.CreateAsync(user, userRegistrationModel.Password);
@@ -80,6 +81,7 @@ namespace pfebackend.Services
             user.FirstName = userUpdateModel.FirstName;
             user.LastName = userUpdateModel.LastName;
             user.PhoneNumber = userUpdateModel.PhoneNumber;
+            user.Avatar = userUpdateModel.Avatar;
 
             return await _userManager.UpdateAsync(user);
         }

@@ -13,6 +13,7 @@ namespace pfebackend.Models
         [Column(TypeName = "nvarchar(100)")]
         public string LastName { get; set; }
 
+        public string? Avatar { get; set; }
 
     }
 }
