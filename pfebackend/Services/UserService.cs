@@ -66,7 +66,8 @@ namespace pfebackend.Services
                     user.FirstName,
                     user.LastName,
                     user.PhoneNumber,
-                    user.Email
+                    user.Email,
+                    user.Avatar
                 };
                 return ( token, userData );
             }
