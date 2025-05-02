@@ -10,7 +10,10 @@
 
         public string PhoneNumber { get; set; }
         public string? Avatar { get; set; }
+        public string? AgriculturalHouseHoldIndicator { get; set; }
 
+        public int? TotalNumberOfFamilyMembers { get; set; }
+        public int? TotalNumberOfFamilyMembersEmployed { get; set; }
 
     }
 }

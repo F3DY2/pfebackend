@@ -40,6 +40,9 @@ namespace pfebackend.Services
                 LastName = userRegistrationModel.LastName,
                 PhoneNumber = userRegistrationModel.PhoneNumber,
                 Avatar = userRegistrationModel.Avatar,
+                AgriculturalHouseHoldIndicator = userRegistrationModel.AgriculturalHouseHoldIndicator,
+                TotalNumberOfFamilyMembers = userRegistrationModel.TotalNumberOfFamilyMembers,
+                TotalNumberOfFamilyMembersEmployed = userRegistrationModel.TotalNumberOfFamilyMembersEmployed
             };
 
             return await _userManager.CreateAsync(user, userRegistrationModel.Password);
@@ -67,7 +70,10 @@ namespace pfebackend.Services
                     user.LastName,
                     user.PhoneNumber,
                     user.Email,
-                    user.Avatar
+                    user.Avatar,
+                    user.AgriculturalHouseHoldIndicator,
+                    user.TotalNumberOfFamilyMembers,
+                    user.TotalNumberOfFamilyMembersEmployed,
                 };
                 return ( token, userData );
             }
@@ -83,6 +89,9 @@ namespace pfebackend.Services
             user.LastName = userUpdateModel.LastName;
             user.PhoneNumber = userUpdateModel.PhoneNumber;
             user.Avatar = userUpdateModel.Avatar;
+            user.AgriculturalHouseHoldIndicator =userUpdateModel.AgriculturalHouseHoldIndicator;
+            user.TotalNumberOfFamilyMembers = userUpdateModel.TotalNumberOfFamilyMembers;
+            user.TotalNumberOfFamilyMembersEmployed = userUpdateModel.TotalNumberOfFamilyMembersEmployed;
 
             return await _userManager.UpdateAsync(user);
         }

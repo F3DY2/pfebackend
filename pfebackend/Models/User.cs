@@ -15,5 +15,9 @@ namespace pfebackend.Models
 
         public string? Avatar { get; set; }
 
+        public string? AgriculturalHouseHoldIndicator { get; set; }
+
+        public int? TotalNumberOfFamilyMembers { get; set; }
+        public int? TotalNumberOfFamilyMembersEmployed { get; set; }
     }
 }
