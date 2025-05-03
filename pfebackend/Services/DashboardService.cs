@@ -18,6 +18,7 @@ public class DashboardService : IDashboardService
         // Get the current active budget period (most recent one that includes today)
         DateTime currentDate = DateTime.Today;
         BudgetPeriod? budgetPeriod = await _context.BudgetPeriods
+            .Include(bp => bp.PredictedExpense)
             .Where(bp => bp.UserId == userId &&
                          bp.StartDate <= currentDate &&
                          bp.EndDate >= currentDate)
@@ -28,6 +29,7 @@ public class DashboardService : IDashboardService
         {
             // If no current period, get the most recent one (either future or past)
             budgetPeriod = await _context.BudgetPeriods
+                .Include(bp => bp.PredictedExpense)
                 .Where(bp => bp.UserId == userId)
                 .OrderByDescending(bp => bp.EndDate)
                 .FirstOrDefaultAsync();
@@ -158,6 +160,7 @@ public class DashboardService : IDashboardService
                 StartDate = budgetPeriod.StartDate,
                 EndDate = budgetPeriod.EndDate,
                 Budgets = budgetDtos,
+                PredictedExpense = budgetPeriod.PredictedExpense?.PredictedExpense,
             },
             Message = budgetPeriod.EndDate < currentDate ?
                 "Showing data for previous budget period" :
