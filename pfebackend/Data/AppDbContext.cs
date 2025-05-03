@@ -22,6 +22,7 @@ namespace pfebackend.Data
 
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<Category> Categories { get; set; }
+        public DbSet<PredictedMonthlyExpense> PredictedMonthlyExpenses { get; set; }
 
     }
 }

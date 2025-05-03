@@ -23,6 +23,7 @@ namespace pfebackend.DTOs
         [Required]
         public string UserId { get; set; }
 
+        public float? PredictedExpense { get; set; }
         public List<BudgetDto>? Budgets { get; set; }
 
 

@@ -10,10 +10,12 @@ namespace pfebackend.Services
     public class BudgetPeriodService : IBudgetPeriodService
     {
         private readonly AppDbContext _context;
-
-        public BudgetPeriodService(AppDbContext context)
+        private readonly IPredictedMonthlyExpenseService _expenseService;
+        public BudgetPeriodService(AppDbContext context,
+        IPredictedMonthlyExpenseService expenseService)
         {
             _context = context;
+            _expenseService = expenseService;
         }
 
         public async Task<List<BudgetPeriodDto>> GetBudgetPeriodsAsync()
@@ -21,6 +23,7 @@ namespace pfebackend.Services
             return await _context.BudgetPeriods
                 .Include(bp => bp.Budgets)
                     .ThenInclude(b => b.Category)
+                .Include(bp => bp.PredictedExpense)
                 .Select(bp => new BudgetPeriodDto
                 {
                     Id = bp.Id,
@@ -30,10 +33,11 @@ namespace pfebackend.Services
                     StartDate = bp.StartDate,
                     EndDate = bp.EndDate,
                     UserId = bp.UserId,
+                    PredictedExpense = bp.PredictedExpense.PredictedExpense,
                     Budgets = bp.Budgets.Select(b => new BudgetDto
                     {
                         Id = b.Id,
-                        CategoryId = b.CategoryId,  // Changed from Category to CategoryId
+                        CategoryId = b.CategoryId,  
                         CategoryName = b.Category.Name,
                         LimitValue = b.LimitValue,
                         AlertValue = b.AlertValue,
@@ -48,6 +52,7 @@ namespace pfebackend.Services
             var budgetPeriod = await _context.BudgetPeriods
                 .Include(bp => bp.Budgets)
                     .ThenInclude(b => b.Category)
+                .Include(bp => bp.PredictedExpense)
                 .FirstOrDefaultAsync(bp => bp.Id == id);
 
             if (budgetPeriod == null)
@@ -64,6 +69,7 @@ namespace pfebackend.Services
                 StartDate = budgetPeriod.StartDate,
                 EndDate = budgetPeriod.EndDate,
                 UserId = budgetPeriod.UserId,
+                PredictedExpense = budgetPeriod.PredictedExpense?.PredictedExpense,
                 Budgets = budgetPeriod.Budgets?.Select(b => new BudgetDto
                 {
                     Id = b.Id,
@@ -82,6 +88,7 @@ namespace pfebackend.Services
                 .Where(bp => bp.UserId == userId)
                 .Include(bp => bp.Budgets)
                     .ThenInclude(b => b.Category)
+                .Include(bp => bp.PredictedExpense)
                 .Select(bp => new BudgetPeriodDto
                 {
                     Id = bp.Id,
@@ -91,6 +98,7 @@ namespace pfebackend.Services
                     StartDate = bp.StartDate,
                     EndDate = bp.EndDate,
                     UserId = bp.UserId,
+                    PredictedExpense = bp.PredictedExpense.PredictedExpense,
                     Budgets = bp.Budgets.Select(b => new BudgetDto
                     {
                         Id = b.Id,
@@ -111,12 +119,16 @@ namespace pfebackend.Services
 
             var budgetPeriod = await _context.BudgetPeriods
                 .Include(bp => bp.Budgets)
+                .Include(bp => bp.PredictedExpense)
                 .FirstOrDefaultAsync(bp => bp.Id == id);
 
             if (budgetPeriod == null)
                 return (false, null);
 
-            // Update main properties
+            // ✅ Save the original income BEFORE updating
+            float originalIncome = budgetPeriod.Income;
+
+            // ✅ Now update main properties
             budgetPeriod.Period = budgetPeriodDto.Period;
             budgetPeriod.Income = budgetPeriodDto.Income;
             budgetPeriod.Savings = budgetPeriodDto.Savings;
@@ -124,7 +136,45 @@ namespace pfebackend.Services
             budgetPeriod.EndDate = budgetPeriodDto.EndDate;
             budgetPeriod.UserId = budgetPeriodDto.UserId;
 
-            // Update budgets if provided
+            // ✅ Only trigger AI prediction if the income actually changed
+            if (originalIncome != budgetPeriodDto.Income)
+            {
+                try
+                {
+                    if (budgetPeriod.PredictedExpense == null)
+                    {
+                        // ✅ Changed this from UpdatePredictedExpense to CreatePredictedExpense
+                        var newExpense = await _expenseService.UpdatePredictedExpense(
+                            budgetPeriod.Id,
+                            budgetPeriodDto.Income,
+                            budgetPeriodDto.UserId);
+
+                        budgetPeriod.PredictedExpense = new PredictedMonthlyExpense
+                        {
+                            PredictedExpense = newExpense.PredictedExpense,
+                            BudgetPeriodId = budgetPeriod.Id,
+                            UserId = newExpense.UserId
+                        };
+                    }
+                    else
+                    {
+                        // ✅ This calls the AI to update prediction
+                        var updatedExpense = await _expenseService.UpdatePredictedExpense(
+                            budgetPeriod.PredictedExpense.Id,
+                            budgetPeriodDto.Income,
+                            budgetPeriodDto.UserId);
+
+                        // ✅ Ensure updated value is stored locally
+                        budgetPeriod.PredictedExpense.PredictedExpense = updatedExpense.PredictedExpense;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Prediction update failed: {ex.Message}");
+                }
+            }
+
+            // ✅ Update budgets if provided
             if (budgetPeriodDto.Budgets != null)
             {
                 foreach (var budgetDto in budgetPeriodDto.Budgets)
@@ -134,7 +184,7 @@ namespace pfebackend.Services
 
                     if (existingBudget != null)
                     {
-                        existingBudget.CategoryId = budgetDto.CategoryId;  // Changed from Category to CategoryId
+                        existingBudget.CategoryId = budgetDto.CategoryId;
                         existingBudget.LimitValue = budgetDto.LimitValue;
                         existingBudget.AlertValue = budgetDto.AlertValue;
                     }
@@ -154,6 +204,10 @@ namespace pfebackend.Services
             try
             {
                 await _context.SaveChangesAsync();
+
+                // ✅ Return updated predicted value in the DTO
+                budgetPeriodDto.PredictedExpense = budgetPeriod.PredictedExpense?.PredictedExpense;
+
                 return (true, budgetPeriodDto);
             }
             catch (DbUpdateConcurrencyException)
@@ -163,6 +217,8 @@ namespace pfebackend.Services
                 throw;
             }
         }
+
+
 
         public async Task<(bool, string, BudgetPeriodDto)> PostBudgetPeriodAsync(BudgetPeriodDto budgetPeriodDto)
         {
@@ -218,6 +274,25 @@ namespace pfebackend.Services
             _context.BudgetPeriods.Add(budgetPeriod);
             await _context.SaveChangesAsync();
 
+            try
+            {
+                // Create predicted expense with the actual budgetPeriod.Id
+                var predictedExpense = new PredictedMonthlyExpense
+                {
+                    PredictedExpense = await _expenseService.GetPredictionFromAI(
+                        budgetPeriodDto.Income,
+                        budgetPeriodDto.UserId),
+                    BudgetPeriodId = budgetPeriod.Id, // Use the actual ID
+                    UserId = budgetPeriodDto.UserId
+                };
+
+                _context.PredictedMonthlyExpenses.Add(predictedExpense);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Prediction failed: {ex.Message}");
+            }
             // Create budgets if provided
             if (budgetPeriodDto.Budgets != null && budgetPeriodDto.Budgets.Any())
             {
@@ -250,6 +325,7 @@ namespace pfebackend.Services
         {
             var budgetPeriod = await _context.BudgetPeriods
                 .Include(bp => bp.Budgets)
+                .Include(bp => bp.PredictedExpense)
                 .FirstOrDefaultAsync(bp => bp.Id == id);
 
             if (budgetPeriod == null)
@@ -259,6 +335,11 @@ namespace pfebackend.Services
             if (budgetPeriod.Budgets.Any())
             {
                 _context.Budgets.RemoveRange(budgetPeriod.Budgets);
+            }
+            // Remove predicted expense if exists
+            if (budgetPeriod.PredictedExpense != null)
+            {
+                _context.PredictedMonthlyExpenses.Remove(budgetPeriod.PredictedExpense);
             }
 
             _context.BudgetPeriods.Remove(budgetPeriod);

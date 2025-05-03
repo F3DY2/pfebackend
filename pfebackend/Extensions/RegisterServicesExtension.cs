@@ -14,7 +14,8 @@ namespace pfebackend.Extensions
                     .AddScoped<IBudgetService, BudgetService>()
                     .AddScoped<INotificationService, NotificationService>()
                     .AddScoped<IDashboardService, DashboardService>()
-                    .AddScoped<ICategoryService, CategoryService>();
+                    .AddScoped<ICategoryService, CategoryService>()
+                    .AddScoped<IPredictedMonthlyExpenseService, PredictedMonthlyExpenseService>();
             return services;
         }
     }

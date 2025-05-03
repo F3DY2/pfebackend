@@ -12,8 +12,8 @@ using pfebackend.Data;
 namespace pfebackend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250430152251_add_avatar_to_user")]
-    partial class add_avatar_to_user
+    [Migration("20250502190036_first_migration")]
+    partial class first_migration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -424,9 +424,40 @@ namespace pfebackend.Migrations
                     b.ToTable("Notifications");
                 });
 
+            modelBuilder.Entity("pfebackend.Models.PredictedMonthlyExpense", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BudgetPeriodId")
+                        .HasColumnType("int");
+
+                    b.Property<float>("PredictedExpense")
+                        .HasColumnType("real");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BudgetPeriodId")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("PredictedMonthlyExpenses");
+                });
+
             modelBuilder.Entity("pfebackend.Models.User", b =>
                 {
                     b.HasBaseType("Microsoft.AspNetCore.Identity.IdentityUser");
+
+                    b.Property<string>("AgriculturalHouseHoldIndicator")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Avatar")
                         .HasColumnType("nvarchar(max)");
@@ -438,6 +469,12 @@ namespace pfebackend.Migrations
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<int?>("TotalNumberOfFamilyMembers")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("TotalNumberOfFamilyMembersEmployed")
+                        .HasColumnType("int");
 
                     b.HasDiscriminator().HasValue("User");
                 });
@@ -553,9 +590,30 @@ namespace pfebackend.Migrations
                     b.Navigation("Category");
                 });
 
+            modelBuilder.Entity("pfebackend.Models.PredictedMonthlyExpense", b =>
+                {
+                    b.HasOne("pfebackend.Models.BudgetPeriod", "BudgetPeriod")
+                        .WithOne("PredictedExpense")
+                        .HasForeignKey("pfebackend.Models.PredictedMonthlyExpense", "BudgetPeriodId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("pfebackend.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("BudgetPeriod");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("pfebackend.Models.BudgetPeriod", b =>
                 {
                     b.Navigation("Budgets");
+
+                    b.Navigation("PredictedExpense");
                 });
 #pragma warning restore 612, 618
         }

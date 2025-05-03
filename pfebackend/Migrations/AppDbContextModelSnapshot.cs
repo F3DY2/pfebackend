@@ -421,6 +421,34 @@ namespace pfebackend.Migrations
                     b.ToTable("Notifications");
                 });
 
+            modelBuilder.Entity("pfebackend.Models.PredictedMonthlyExpense", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BudgetPeriodId")
+                        .HasColumnType("int");
+
+                    b.Property<float>("PredictedExpense")
+                        .HasColumnType("real");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BudgetPeriodId")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("PredictedMonthlyExpenses");
+                });
+
             modelBuilder.Entity("pfebackend.Models.User", b =>
                 {
                     b.HasBaseType("Microsoft.AspNetCore.Identity.IdentityUser");
@@ -559,9 +587,30 @@ namespace pfebackend.Migrations
                     b.Navigation("Category");
                 });
 
+            modelBuilder.Entity("pfebackend.Models.PredictedMonthlyExpense", b =>
+                {
+                    b.HasOne("pfebackend.Models.BudgetPeriod", "BudgetPeriod")
+                        .WithOne("PredictedExpense")
+                        .HasForeignKey("pfebackend.Models.PredictedMonthlyExpense", "BudgetPeriodId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("pfebackend.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("BudgetPeriod");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("pfebackend.Models.BudgetPeriod", b =>
                 {
                     b.Navigation("Budgets");
+
+                    b.Navigation("PredictedExpense");
                 });
 #pragma warning restore 612, 618
         }

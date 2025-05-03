@@ -35,6 +35,10 @@ namespace pfebackend.Migrations
                     Discriminator = table.Column<string>(type: "nvarchar(13)", maxLength: 13, nullable: false),
                     FirstName = table.Column<string>(type: "nvarchar(100)", nullable: true),
                     LastName = table.Column<string>(type: "nvarchar(100)", nullable: true),
+                    Avatar = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    AgriculturalHouseHoldIndicator = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    TotalNumberOfFamilyMembers = table.Column<int>(type: "int", nullable: true),
+                    TotalNumberOfFamilyMembersEmployed = table.Column<int>(type: "int", nullable: true),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -279,6 +283,32 @@ namespace pfebackend.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "PredictedMonthlyExpenses",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    PredictedExpense = table.Column<float>(type: "real", nullable: false),
+                    BudgetPeriodId = table.Column<int>(type: "int", nullable: false),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PredictedMonthlyExpenses", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_PredictedMonthlyExpenses_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_PredictedMonthlyExpenses_BudgetPeriods_BudgetPeriodId",
+                        column: x => x.BudgetPeriodId,
+                        principalTable: "BudgetPeriods",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.InsertData(
                 table: "Categories",
                 columns: new[] { "Id", "Name" },
@@ -362,6 +392,17 @@ namespace pfebackend.Migrations
                 name: "IX_Notifications_CategoryId",
                 table: "Notifications",
                 column: "CategoryId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PredictedMonthlyExpenses_BudgetPeriodId",
+                table: "PredictedMonthlyExpenses",
+                column: "BudgetPeriodId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PredictedMonthlyExpenses_UserId",
+                table: "PredictedMonthlyExpenses",
+                column: "UserId");
         }
 
         /// <inheritdoc />
@@ -392,13 +433,16 @@ namespace pfebackend.Migrations
                 name: "Notifications");
 
             migrationBuilder.DropTable(
+                name: "PredictedMonthlyExpenses");
+
+            migrationBuilder.DropTable(
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
-                name: "BudgetPeriods");
+                name: "Categories");
 
             migrationBuilder.DropTable(
-                name: "Categories");
+                name: "BudgetPeriods");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");
