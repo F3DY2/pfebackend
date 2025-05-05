@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using pfebackend.Data;
 using pfebackend.DTOs;
 using pfebackend.Interfaces;
@@ -137,5 +138,56 @@ namespace pfebackend.Services
 
             return prediction;
         }
+
+
+        public async Task<PredictedMonthlyExpenseDto> updatePredictedExpenseWhenUserDetailsChanged(string UserId)
+        {
+            DateTime currentDate = DateTime.Today;
+            BudgetPeriod? budgetPeriod = await _context.BudgetPeriods
+                .Include(bp => bp.PredictedExpense)
+                .Where(bp => bp.UserId == UserId &&
+                             bp.StartDate <= currentDate &&
+                             bp.EndDate >= currentDate)
+                .OrderByDescending(bp => bp.EndDate)
+                .FirstOrDefaultAsync();
+
+            if (budgetPeriod == null)
+            {
+                // If no current period, get the most recent one (either future or past)
+                budgetPeriod = await _context.BudgetPeriods
+                    .Include(bp => bp.PredictedExpense)
+                    .Where(bp => bp.UserId == UserId)
+                    .OrderByDescending(bp => bp.EndDate)
+                    .FirstOrDefaultAsync();
+
+                if (budgetPeriod == null)
+                {
+                   
+                }
+            }
+            var predectedMonthlyExpense= await _context.PredictedMonthlyExpenses
+                    
+                    .Where(pe => pe.BudgetPeriodId == budgetPeriod.Id)
+                    
+                    .FirstOrDefaultAsync();
+            var expense = await _context.PredictedMonthlyExpenses.FindAsync(predectedMonthlyExpense.Id);
+            if (expense == null)
+                throw new KeyNotFoundException("Predicted expense not found");
+
+            expense.PredictedExpense = await GetPredictionFromAI(budgetPeriod.Income, UserId);
+
+            await _context.SaveChangesAsync();
+
+            return new PredictedMonthlyExpenseDto
+            {
+                PredictedExpense = expense.PredictedExpense,
+                BudgetPeriodId = expense.BudgetPeriodId,
+                UserId = expense.UserId
+            };
+        }
+
+
+
+
     }
 }

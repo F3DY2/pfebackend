@@ -21,13 +21,16 @@ namespace pfebackend.Services
         private readonly IOptions<AppSettings> _appSettings;
         private readonly IEmailSender _emailSender;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IPredictedMonthlyExpenseService _predictedMonthlyExpenseService;
 
-        public UserService(UserManager<User> userManager, IOptions<AppSettings> appSettings, IEmailSender emailSender, IHttpContextAccessor httpContextAccessor)
+
+        public UserService(UserManager<User> userManager, IOptions<AppSettings> appSettings, IEmailSender emailSender, IHttpContextAccessor httpContextAccessor, IPredictedMonthlyExpenseService predictedMonthlyExpenseService)
         {
             _userManager = userManager;
             _appSettings = appSettings;
             _emailSender = emailSender;
             _httpContextAccessor = httpContextAccessor;
+            _predictedMonthlyExpenseService = predictedMonthlyExpenseService;
         }
 
         public async Task<IdentityResult> CreateUserAsync(UserRegistrationDto userRegistrationModel)
@@ -85,6 +88,8 @@ namespace pfebackend.Services
             if (user == null)
                 return IdentityResult.Failed(new IdentityError { Description = "User not found" });
 
+            
+
             user.FirstName = userUpdateModel.FirstName;
             user.LastName = userUpdateModel.LastName;
             user.PhoneNumber = userUpdateModel.PhoneNumber;
@@ -92,8 +97,15 @@ namespace pfebackend.Services
             user.AgriculturalHouseHoldIndicator =userUpdateModel.AgriculturalHouseHoldIndicator;
             user.TotalNumberOfFamilyMembers = userUpdateModel.TotalNumberOfFamilyMembers;
             user.TotalNumberOfFamilyMembersEmployed = userUpdateModel.TotalNumberOfFamilyMembersEmployed;
+            var updateResult = await _userManager.UpdateAsync(user);
 
-            return await _userManager.UpdateAsync(user);
+            // Après la mise à jour, appeler la méthode de recalcul
+            if (updateResult.Succeeded)
+            {
+                await _predictedMonthlyExpenseService.updatePredictedExpenseWhenUserDetailsChanged(user.Id);
+            }
+
+            return updateResult;
         }
         public async Task<IdentityResult> ForgotPasswordHandler(ForgotPasswordDto forgotPassword)
         {

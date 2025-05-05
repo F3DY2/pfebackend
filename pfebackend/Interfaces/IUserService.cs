@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using pfebackend.DTOs;
+using pfebackend.Models;
 
 namespace pfebackend.Interfaces
 {
