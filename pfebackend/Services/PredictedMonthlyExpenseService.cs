@@ -154,7 +154,10 @@ namespace pfebackend.Services
 
             if (budgetPeriod == null)
             {
-                throw new KeyNotFoundException("No budget period found for user");
+                return new PredictedMonthlyExpenseDto
+                {
+
+                };
             }
 
             var predictedExpense = await _context.PredictedMonthlyExpenses
