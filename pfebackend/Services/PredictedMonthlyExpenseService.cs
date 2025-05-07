@@ -140,49 +140,45 @@ namespace pfebackend.Services
         }
 
 
-        public async Task<PredictedMonthlyExpenseDto> updatePredictedExpenseWhenUserDetailsChanged(string UserId)
+        public async Task<PredictedMonthlyExpenseDto> updatePredictedExpenseWhenUserDetailsChanged(string userId)
         {
+            if (string.IsNullOrEmpty(userId))
+                throw new ArgumentException("User ID cannot be empty");
+
             DateTime currentDate = DateTime.Today;
-            BudgetPeriod? budgetPeriod = await _context.BudgetPeriods
+            var budgetPeriod = await _context.BudgetPeriods
                 .Include(bp => bp.PredictedExpense)
-                .Where(bp => bp.UserId == UserId &&
-                             bp.StartDate <= currentDate &&
-                             bp.EndDate >= currentDate)
+                .Where(bp => bp.UserId == userId)
                 .OrderByDescending(bp => bp.EndDate)
                 .FirstOrDefaultAsync();
 
             if (budgetPeriod == null)
             {
-                // If no current period, get the most recent one (either future or past)
-                budgetPeriod = await _context.BudgetPeriods
-                    .Include(bp => bp.PredictedExpense)
-                    .Where(bp => bp.UserId == UserId)
-                    .OrderByDescending(bp => bp.EndDate)
-                    .FirstOrDefaultAsync();
-
-                if (budgetPeriod == null)
-                {
-                   
-                }
+                throw new KeyNotFoundException("No budget period found for user");
             }
-            var predectedMonthlyExpense= await _context.PredictedMonthlyExpenses
-                    
-                    .Where(pe => pe.BudgetPeriodId == budgetPeriod.Id)
-                    
-                    .FirstOrDefaultAsync();
-            var expense = await _context.PredictedMonthlyExpenses.FindAsync(predectedMonthlyExpense.Id);
-            if (expense == null)
-                throw new KeyNotFoundException("Predicted expense not found");
 
-            expense.PredictedExpense = await GetPredictionFromAI(budgetPeriod.Income, UserId);
+            var predictedExpense = await _context.PredictedMonthlyExpenses
+                .FirstOrDefaultAsync(pe => pe.BudgetPeriodId == budgetPeriod.Id);
 
+            if (predictedExpense == null)
+            {
+                // Option 1: Create new predicted expense if none exists
+                predictedExpense = new PredictedMonthlyExpense
+                {
+                    BudgetPeriodId = budgetPeriod.Id,
+                    UserId = userId
+                };
+                _context.PredictedMonthlyExpenses.Add(predictedExpense);
+            }
+
+            predictedExpense.PredictedExpense = await GetPredictionFromAI(budgetPeriod.Income, userId);
             await _context.SaveChangesAsync();
 
             return new PredictedMonthlyExpenseDto
             {
-                PredictedExpense = expense.PredictedExpense,
-                BudgetPeriodId = expense.BudgetPeriodId,
-                UserId = expense.UserId
+                PredictedExpense = predictedExpense.PredictedExpense,
+                BudgetPeriodId = predictedExpense.BudgetPeriodId,
+                UserId = predictedExpense.UserId
             };
         }
 
