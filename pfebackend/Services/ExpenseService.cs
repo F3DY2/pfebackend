@@ -259,7 +259,7 @@ namespace pfebackend.Services
                     budget.BudgetPeriod.StartDate,
                     budget.BudgetPeriod.EndDate);
 
-                await HandleBudgetAlerts(
+                    await HandleBudgetAlerts(
                     dto.UserId,
                     category.Id,
                     category.Name,
@@ -268,6 +268,7 @@ namespace pfebackend.Services
                     budget.AlertValue,
                     dto.Date,
                     budget.BudgetPeriod);
+
             }
         }
 
@@ -341,11 +342,19 @@ namespace pfebackend.Services
 
         private async Task SendBudgetEmail(string email, string subject, string content)
         {
-            var message = new Message(
-                new[] { email },
-                subject,
-                content);
-            _emailSender.SendEmail(message);
+            try
+            {
+                var message = new Message(
+                    new[] { email },
+                    subject,
+                    content);
+                _emailSender.SendEmail(message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Warning: Failed to send email. Error: {ex.Message}");
+            }
+
         }
         private async Task RecalculateSavings(string userId, DateTime expenseDate, float expenseAmount)
         {
