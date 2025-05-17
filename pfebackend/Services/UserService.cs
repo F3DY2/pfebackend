@@ -43,7 +43,8 @@ namespace pfebackend.Services
                 LastName = userRegistrationModel.LastName,
                 PhoneNumber = userRegistrationModel.PhoneNumber,
                 Avatar = userRegistrationModel.Avatar,
-                AgriculturalHouseHoldIndicator = userRegistrationModel.AgriculturalHouseHoldIndicator,
+                TotalNumberOfBedrooms = userRegistrationModel.TotalNumberOfBedrooms,
+                TotalNumberOfCars = userRegistrationModel.TotalNumberOfCars,
                 TotalNumberOfFamilyMembers = userRegistrationModel.TotalNumberOfFamilyMembers,
                 TotalNumberOfFamilyMembersEmployed = userRegistrationModel.TotalNumberOfFamilyMembersEmployed
             };
@@ -74,7 +75,8 @@ namespace pfebackend.Services
                     user.PhoneNumber,
                     user.Email,
                     user.Avatar,
-                    user.AgriculturalHouseHoldIndicator,
+                    user.TotalNumberOfBedrooms,
+                    user.TotalNumberOfCars,
                     user.TotalNumberOfFamilyMembers,
                     user.TotalNumberOfFamilyMembersEmployed,
                 };
@@ -94,7 +96,8 @@ namespace pfebackend.Services
             user.LastName = userUpdateModel.LastName;
             user.PhoneNumber = userUpdateModel.PhoneNumber;
             user.Avatar = userUpdateModel.Avatar;
-            user.AgriculturalHouseHoldIndicator =userUpdateModel.AgriculturalHouseHoldIndicator;
+            user.TotalNumberOfBedrooms =userUpdateModel.TotalNumberOfBedrooms;
+            user.TotalNumberOfCars = userUpdateModel.TotalNumberOfCars;
             user.TotalNumberOfFamilyMembers = userUpdateModel.TotalNumberOfFamilyMembers;
             user.TotalNumberOfFamilyMembersEmployed = userUpdateModel.TotalNumberOfFamilyMembersEmployed;
             var updateResult = await _userManager.UpdateAsync(user);
@@ -102,7 +105,16 @@ namespace pfebackend.Services
             // Après la mise à jour, appeler la méthode de recalcul
             if (updateResult.Succeeded)
             {
-                await _predictedMonthlyExpenseService.updatePredictedExpenseWhenUserDetailsChanged(user.Id);
+                try
+                {
+                    await _predictedMonthlyExpenseService.updatePredictedExpenseWhenUserDetailsChanged(user.Id);
+                }
+                catch (Exception ex)
+                {
+                    // Optional: log the exception
+                    Console.WriteLine($"Prediction service failed: {ex.Message}");
+                    // or use a logger like _logger.LogError(ex, "Prediction update failed");
+                }
             }
 
             return updateResult;

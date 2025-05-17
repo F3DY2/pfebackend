@@ -95,23 +95,22 @@ namespace pfebackend.Services
                 throw new ArgumentException("User not found");
 
             // Validate required prediction parameters
-            if (string.IsNullOrEmpty(user.AgriculturalHouseHoldIndicator) ||
+            if  (!user.TotalNumberOfBedrooms.HasValue ||
+                !user.TotalNumberOfCars.HasValue ||
                 !user.TotalNumberOfFamilyMembers.HasValue ||
                 !user.TotalNumberOfFamilyMembersEmployed.HasValue)
             {
                 throw new InvalidOperationException(
                     "User profile missing required prediction parameters: " +
-                    "AgriculturalHouseHoldIndicator, TotalNumberOfFamilyMembers, " +
+                    "TotalNumberOfBedrooms, TotalNumberOfFamilyMembers, " +
+                    "and TotalNumberOfFamilyMembers must be set" +
                     "and TotalNumberOfFamilyMembersEmployed must be set");
             }
 
             // Prepare API request
-            int agriIndicator;
-            if (!int.TryParse(user.AgriculturalHouseHoldIndicator, out agriIndicator))
-            {
-                throw new InvalidOperationException("Invalid AgriculturalHouseHoldIndicator value");
-            }
-            var fullUrl = $"http://localhost:5000/predict_expense/{income}/{agriIndicator}/" +
+            var fullUrl = $"http://localhost:5000/predict_expense/{income}" +
+                          $"/{user.TotalNumberOfBedrooms.Value}/" +
+                          $"{user.TotalNumberOfCars.Value}/" +
                           $"{user.TotalNumberOfFamilyMembers.Value}/" +
                           $"{user.TotalNumberOfFamilyMembersEmployed.Value}";
 
